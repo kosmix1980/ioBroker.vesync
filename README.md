@@ -111,6 +111,12 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.5 (2026-08-10)
+
+- Only create remote objects relevant for each device type
+- Auto-detect new devices on refresh and update interval
+- Remove unused remotes from other device categories
+
 ### 1.0.4 (2026-05-18)
 
 - Add Cosori Oven support (CS130, CS125, CS100, AG500) with getOvenStatusV2, startStepCook, skipStep, setTempUnit

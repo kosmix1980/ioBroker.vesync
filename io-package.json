@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "news": {
+      "1.0.5": {
+        "en": "Create only device-specific remote objects\nAuto-detect new devices on refresh/interval\nRemove unused remotes for other device types",
+        "de": "Nur gerätespezifische Remote-Objekte anlegen\nNeue Geräte automatisch bei Refresh/Intervall erkennen\nNicht passende Remotes anderer Gerätetypen entfernen"
+      },
       "1.0.4": {
         "en": "Add Cosori Oven support (CS130, CS125, CS100, AG500) with getOvenStatusV2, startStepCook, skipStep, setTempUnit\nAdd Cosori Dual Blaze TwinFry multi-zone support (getAirfryerMultiStatus, startMultiCook, quitSyncFinish)\nAdd Purifier pet mode (setPurifierMode: pet, turbo, pollen)",
         "de": "Cosori Ofenunterstützung (CS130, CS125, CS100, AG500) mit getOvenStatusV2, startStepCook, skipStep, setTempUnit\nFügen Sie Cosori Dual Blaze TwinFry Multizone Unterstützung hinzu (getAirfryerMultiStatus, startMultiCook, quitSyncFinish)\nHinzufügen Purifier Tiermodus (setPurifierMode: pet, turbo, pollen)",

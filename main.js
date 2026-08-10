@@ -88,11 +88,10 @@ class Vesync extends utils.Adapter {
     this.log.info('Login to VeSync');
     await this.login();
     if (this.session.token) {
-      await this.getDeviceList();
-      await this.updateDevices();
+      await this.syncDevices();
       this.updateInterval = setInterval(
         async () => {
-          await this.updateDevices();
+          await this.syncDevices();
         },
         this.config.interval * 60 * 1000,
       );
@@ -339,8 +338,20 @@ class Vesync extends utils.Adapter {
     }
   }
 
+  /**
+   * Refresh device list (incl. new devices) and then update status.
+   */
+  async syncDevices() {
+    await this.getDeviceList();
+    await this.updateDevices();
+  }
+
   async getDeviceList() {
     const deviceListUrl = `${this.getApiBaseUrl()}/cloud/v2/deviceManaged/devices`;
+    const knownCids = new Set(this.deviceArray.map((device) => device.cid).filter(Boolean));
+    const isInitialLoad = knownCids.size === 0;
+    this.deviceArray = [];
+    this.fetchHealthData = null;
     this.log.info(`Fetching device list from: ${deviceListUrl}`);
     await this.requestClient({
       method: 'post',
@@ -387,11 +398,16 @@ class Vesync extends utils.Adapter {
 
             this.log.debug(JSON.stringify(device));
             let id = device.cid;
+            let isNewDevice = false;
             if (!device.cid) {
               this.log.warn(`Device without cid: ${JSON.stringify(device)}. Device will be ignored`);
               id = device.deviceName;
             } else {
+              isNewDevice = !knownCids.has(device.cid);
               this.deviceArray.push(device);
+              if (isNewDevice && !isInitialLoad) {
+                this.log.info(`New device detected: ${device.deviceName} (${device.deviceType})`);
+              }
             }
 
             // if (device.subDeviceNo) {
@@ -415,163 +431,20 @@ class Vesync extends utils.Adapter {
               native: {},
             });
 
-            const remoteArray = [
-              { command: 'Refresh', name: 'True = Refresh' },
-              { command: 'setSwitch', name: 'True = Switch On, False = Switch Off' },
-              { command: 'endCook', name: 'True = EndCook' },
-              { command: 'setDisplay', name: 'True = On, False = Off' },
-              { command: 'setChildLock', name: 'True = On, False = Off' },
-              { command: 'setPurifierMode', name: 'sleep, auto, pet, turbo or pollen', def: 'auto', type: 'string', role: 'text' },
-              { command: 'setFanMode', name: 'normal, turbo, sleep, auto', def: 'normal', type: 'string', role: 'text' },
-              { command: 'setFanSpeed', name: 'Fan speed level (1-12)', type: 'number', def: 1, role: 'level' },
-              { command: 'setOscillation', name: 'True = On, False = Off' },
-              { command: 'setBrightness', name: 'Bulb brightness (1-100)', type: 'number', def: 100, role: 'level.dimmer' },
-              { command: 'setColorTemp', name: 'Color temperature (2700-6500)', type: 'number', def: 4000, role: 'level.color.temperature' },
-              { command: 'setNightLight', name: 'on, off, dim or auto', def: 'off', type: 'string', role: 'text' },
-              // RGB Bulb color
-              { command: 'setColorHue', name: 'Hue (0-360)', type: 'number', def: 0, role: 'level.color.hue' },
-              { command: 'setColorSaturation', name: 'Saturation (0-100)', type: 'number', def: 100, role: 'level.color.saturation' },
-              { command: 'setColorMode', name: 'white or color', def: 'white', type: 'string', role: 'text' },
-              // Dimmer switch
-              { command: 'setDimmerBrightness', name: 'Dimmer brightness (0-100)', type: 'number', def: 100, role: 'level.dimmer' },
-              // Thermostat
-              { command: 'setTargetTemp', name: 'Target temperature', type: 'number', def: 21, role: 'level.temperature' },
-              { command: 'setThermostatMode', name: 'off, heat, cool, auto', def: 'auto', type: 'string', role: 'text' },
-              { command: 'setThermostatFanMode', name: 'auto, on, circulate', def: 'auto', type: 'string', role: 'text' },
-              {
-                command: 'startCook',
-                name: 'Start Cooking',
-                def: `{
-                  "accountId": "${this.session.accountID}",
-                  "cookTempDECP": 0,
-                  "hasPreheat": 0,
-                  "hasWarm": false,
-                  "imageUrl": "",
-                  "mode": "Chicken",
-                  "readyStart": true,
-                  "recipeId": 2,
-                  "recipeName": "Huhn",
-                  "recipeType": 3,
-                  "startAct": {
-                      "appointingTime": 0,
-                      "cookSetTime": 780,
-                      "cookTemp": 210,
-                      "cookTempDECP": 0,
-                      "imageUrl": "",
-                      "level": 0,
-                      "preheatTemp": 0,
-                      "shakeTime": 0,
-                      "targetTemp": 0
-                  },
-                  "tempUnit": "c"
-              }`,
-                type: 'string',
-                role: 'json',
-              },
-              {
-                command: 'cookMode',
-                name: 'Start cookMode ',
-                def: `{
-                  "accountId": "${this.session.accountID}",
-                  "appointmentTs": 0,
-                  "cookSetTemp": 175,
-                  "cookSetTime": 15,
-                  "cookStatus": "cooking",
-                  "customRecipe": "Manuell",
-                  "mode": "custom",
-                  "readyStart": true,
-                  "recipeId": 1,
-                  "recipeType": 3,
-                  "tempUnit": "celsius"
-              }`,
-                type: 'string',
-                role: 'json',
-              },
-              {
-                command: 'startMultiCook',
-                name: 'Start Multi/Dual Zone Cooking',
-                def: `{
-                  "syncType": 0,
-                  "workChamber": 4,
-                  "tempUnit": "celsius",
-                  "accountId": "${this.session.accountID}",
-                  "readyStart": true,
-                  "cookConfigs": [
-                    {
-                      "cookSetTime": 600,
-                      "cookTemp": 180,
-                      "mode": "AirFry",
-                      "chamber": 1
-                    },
-                    {
-                      "cookSetTime": 480,
-                      "cookTemp": 200,
-                      "mode": "AirFry",
-                      "chamber": 2
-                    }
-                  ]
-              }`,
-                type: 'string',
-                role: 'json',
-              },
-              {
-                command: 'preheatCook',
-                name: 'Start Preheat',
-                def: '{}',
-                type: 'string',
-                role: 'json',
-              },
-              {
-                command: 'setTimeOrTemp',
-                name: 'Set Time or Temp during cooking',
-                def: '{"cookSetTime": 600, "cookSetTemp": 180}',
-                type: 'string',
-                role: 'json',
-              },
-              { command: 'setLightSwitch', name: 'Light On/Off' },
-              { command: 'quitSyncFinish', name: 'Quit Sync Finish Mode' },
-              {
-                command: 'startStepCook',
-                name: 'Start Step/Program Cooking (Oven)',
-                def: `{
-                  "accountId": "${this.session.accountID}",
-                  "hasPreheat": 1,
-                  "preheatTemp": 180,
-                  "readyStart": true,
-                  "tempUnit": "celsius",
-                  "stepArray": [
-                    {
-                      "cookSetTime": 600,
-                      "cookTemp": 180,
-                      "mode": "Bake",
-                      "level": 0,
-                      "shakeTime": 0,
-                      "windMode": 0
-                    }
-                  ]
-                }`,
-                type: 'string',
-                role: 'json',
-              },
-              { command: 'skipStep', name: 'Skip current step (Oven)' },
-              { command: 'setTempUnit', name: 'Set Temp Unit (f or c)', def: 'c', type: 'string', role: 'text' },
-              { command: 'setHumidityMode', name: 'sleep, manual or auto', def: 'auto', type: 'string', role: 'text' },
-              {
-                command: 'setProperty',
-                name: 'setProperty like PowerSwitch',
-
-                type: 'string',
-                role: 'json',
-                def: '{"powerSwitch_1":1}',
-              },
-              { command: 'setTargetHumidity', name: 'set Target Humidity', type: 'number', def: 65, role: 'level' },
-              { command: 'setLevel-mist', name: 'set Level Mist', type: 'number', def: 10, role: 'level' },
-              { command: 'setLevel-wind', name: 'set Level Wind', type: 'number', def: 10, role: 'level' },
-              { command: 'setLevel-warm', name: 'set Level Warm', type: 'number', def: 10, role: 'level' },
-            ];
             if (device.cid) {
-              remoteArray.forEach((remote) => {
-                this.extendObject(id + '.remote.' + remote.command, {
+              const category = this.getDeviceCategory(device);
+              const remoteArray = this.buildRemoteArray(device, category);
+              const remoteLog = `Device ${device.deviceName} (${device.deviceType}) category=${category}, remotes=${remoteArray
+                .map((r) => r.command)
+                .join(', ')}`;
+              if (isNewDevice || isInitialLoad) {
+                this.log.info(remoteLog);
+              } else {
+                this.log.debug(remoteLog);
+              }
+              const allowedCommands = new Set(remoteArray.map((remote) => remote.command));
+              for (const remote of remoteArray) {
+                await this.extendObjectAsync(id + '.remote.' + remote.command, {
                   type: 'state',
                   common: {
                     name: remote.name || '',
@@ -583,7 +456,8 @@ class Vesync extends utils.Adapter {
                   },
                   native: {},
                 });
-              });
+              }
+              await this.cleanupRemoteObjects(id, allowedCommands);
             }
             this.json2iob.parse(id + '.general', device, { forceIndex: true });
           }
@@ -851,6 +725,404 @@ class Vesync extends utils.Adapter {
         });
     }
   }
+  /**
+   * Detect device category from type/config for remote filtering.
+   * @param {Record<string, any>} device
+   * @returns {string}
+   */
+  getDeviceCategory(device) {
+    const type = device.deviceType || '';
+    const config = device.configModule || '';
+    const isOven =
+      config.includes('Oven') ||
+      config.includes('OVN') ||
+      type.startsWith('AG') ||
+      /^CS(100|125|130)/.test(type);
+
+    if (type.startsWith('ES') && !type.startsWith('ESW') && !type.startsWith('ESO') && !type.startsWith('ESL') && !type.startsWith('ESWL') && !type.startsWith('ESWD')) {
+      return 'scale';
+    }
+    if (isOven && (type.startsWith('CS') || type.startsWith('CA') || type.startsWith('AG'))) {
+      return 'oven';
+    }
+    if (type.startsWith('CA') || type.startsWith('CS')) {
+      if (
+        config.includes('Twin') ||
+        config.includes('Dual') ||
+        config.includes('Multi') ||
+        config.includes('TwinFry')
+      ) {
+        return 'airfryer_multi';
+      }
+      return 'airfryer';
+    }
+    if (
+      type.includes('LUH-') ||
+      type.includes('Classic') ||
+      type.includes('LV600') ||
+      type.includes('Dual') ||
+      type.includes('LEH-')
+    ) {
+      return 'humidifier';
+    }
+    if (type.includes('LAP-') || type.includes('Core') || type.includes('LV-')) {
+      return 'purifier';
+    }
+    if (type.includes('LTF-') || type.includes('LPF-')) {
+      return 'fan';
+    }
+    if (type.startsWith('ESWD')) {
+      return 'dimmer';
+    }
+    if (type.startsWith('ESWL')) {
+      return 'switch';
+    }
+    if (
+      type.startsWith('WHOGPLUG') ||
+      type.startsWith('WYZYOG') ||
+      type.startsWith('ESW') ||
+      type.startsWith('ESO') ||
+      type.startsWith('wifi-switch')
+    ) {
+      return 'outlet';
+    }
+    if (type.startsWith('ESL') || type.startsWith('XYD')) {
+      return 'bulb';
+    }
+    if (type.startsWith('LTM-')) {
+      return 'thermostat';
+    }
+    if (type.startsWith('BS') || type.startsWith('BSDOG')) {
+      return 'smartplug';
+    }
+    return 'generic';
+  }
+
+  /**
+   * Build remote command states for a device category.
+   * @param {Record<string, any>} device
+   * @param {string} category
+   */
+  buildRemoteArray(device, category) {
+    const accountId = this.session.accountID;
+    const remotesByCategory = {
+      common: [{ command: 'Refresh', name: 'True = Sync devices and refresh status' }],
+      switchable: [{ command: 'setSwitch', name: 'True = Switch On, False = Switch Off' }],
+      displayLock: [
+        { command: 'setDisplay', name: 'True = On, False = Off' },
+        { command: 'setChildLock', name: 'True = On, False = Off' },
+      ],
+      airfryer: [
+        { command: 'endCook', name: 'True = EndCook' },
+        {
+          command: 'startCook',
+          name: 'Start Cooking',
+          def: `{
+                  "accountId": "${accountId}",
+                  "cookTempDECP": 0,
+                  "hasPreheat": 0,
+                  "hasWarm": false,
+                  "imageUrl": "",
+                  "mode": "Chicken",
+                  "readyStart": true,
+                  "recipeId": 2,
+                  "recipeName": "Huhn",
+                  "recipeType": 3,
+                  "startAct": {
+                      "appointingTime": 0,
+                      "cookSetTime": 780,
+                      "cookTemp": 210,
+                      "cookTempDECP": 0,
+                      "imageUrl": "",
+                      "level": 0,
+                      "preheatTemp": 0,
+                      "shakeTime": 0,
+                      "targetTemp": 0
+                  },
+                  "tempUnit": "c"
+              }`,
+          type: 'string',
+          role: 'json',
+        },
+        {
+          command: 'cookMode',
+          name: 'Start cookMode ',
+          def: `{
+                  "accountId": "${accountId}",
+                  "appointmentTs": 0,
+                  "cookSetTemp": 175,
+                  "cookSetTime": 15,
+                  "cookStatus": "cooking",
+                  "customRecipe": "Manuell",
+                  "mode": "custom",
+                  "readyStart": true,
+                  "recipeId": 1,
+                  "recipeType": 3,
+                  "tempUnit": "celsius"
+              }`,
+          type: 'string',
+          role: 'json',
+        },
+        {
+          command: 'preheatCook',
+          name: 'Start Preheat',
+          def: '{}',
+          type: 'string',
+          role: 'json',
+        },
+        {
+          command: 'setTimeOrTemp',
+          name: 'Set Time or Temp during cooking',
+          def: '{"cookSetTime": 600, "cookSetTemp": 180}',
+          type: 'string',
+          role: 'json',
+        },
+        { command: 'setLightSwitch', name: 'Light On/Off' },
+        { command: 'setTempUnit', name: 'Set Temp Unit (f or c)', def: 'c', type: 'string', role: 'text' },
+      ],
+      airfryer_multi: [
+        {
+          command: 'startMultiCook',
+          name: 'Start Multi/Dual Zone Cooking',
+          def: `{
+                  "syncType": 0,
+                  "workChamber": 4,
+                  "tempUnit": "celsius",
+                  "accountId": "${accountId}",
+                  "readyStart": true,
+                  "cookConfigs": [
+                    {
+                      "cookSetTime": 600,
+                      "cookTemp": 180,
+                      "mode": "AirFry",
+                      "chamber": 1
+                    },
+                    {
+                      "cookSetTime": 480,
+                      "cookTemp": 200,
+                      "mode": "AirFry",
+                      "chamber": 2
+                    }
+                  ]
+              }`,
+          type: 'string',
+          role: 'json',
+        },
+        { command: 'quitSyncFinish', name: 'Quit Sync Finish Mode' },
+      ],
+      oven: [
+        { command: 'endCook', name: 'True = EndCook' },
+        {
+          command: 'preheatCook',
+          name: 'Start Preheat',
+          def: '{}',
+          type: 'string',
+          role: 'json',
+        },
+        {
+          command: 'setTimeOrTemp',
+          name: 'Set Time or Temp during cooking',
+          def: '{"cookSetTime": 600, "cookSetTemp": 180}',
+          type: 'string',
+          role: 'json',
+        },
+        { command: 'setLightSwitch', name: 'Light On/Off' },
+        {
+          command: 'startStepCook',
+          name: 'Start Step/Program Cooking (Oven)',
+          def: `{
+                  "accountId": "${accountId}",
+                  "hasPreheat": 1,
+                  "preheatTemp": 180,
+                  "readyStart": true,
+                  "tempUnit": "celsius",
+                  "stepArray": [
+                    {
+                      "cookSetTime": 600,
+                      "cookTemp": 180,
+                      "mode": "Bake",
+                      "level": 0,
+                      "shakeTime": 0,
+                      "windMode": 0
+                    }
+                  ]
+                }`,
+          type: 'string',
+          role: 'json',
+        },
+        { command: 'skipStep', name: 'Skip current step (Oven)' },
+        { command: 'setTempUnit', name: 'Set Temp Unit (f or c)', def: 'c', type: 'string', role: 'text' },
+      ],
+      purifier: [
+        {
+          command: 'setPurifierMode',
+          name: 'sleep, auto, pet, turbo or pollen',
+          def: 'auto',
+          type: 'string',
+          role: 'text',
+        },
+        { command: 'setLevel-wind', name: 'set Level Wind', type: 'number', def: 10, role: 'level' },
+        { command: 'setNightLight', name: 'on, off, dim or auto', def: 'off', type: 'string', role: 'text' },
+      ],
+      humidifier: [
+        {
+          command: 'setHumidityMode',
+          name: 'sleep, manual or auto',
+          def: 'auto',
+          type: 'string',
+          role: 'text',
+        },
+        { command: 'setTargetHumidity', name: 'set Target Humidity', type: 'number', def: 65, role: 'level' },
+        { command: 'setLevel-mist', name: 'set Level Mist', type: 'number', def: 10, role: 'level' },
+        { command: 'setLevel-warm', name: 'set Level Warm', type: 'number', def: 10, role: 'level' },
+        { command: 'setNightLight', name: 'on, off, dim or auto', def: 'off', type: 'string', role: 'text' },
+      ],
+      fan: [
+        {
+          command: 'setFanMode',
+          name: 'normal, turbo, sleep, auto',
+          def: 'normal',
+          type: 'string',
+          role: 'text',
+        },
+        { command: 'setFanSpeed', name: 'Fan speed level (1-12)', type: 'number', def: 1, role: 'level' },
+        { command: 'setOscillation', name: 'True = On, False = Off' },
+      ],
+      bulb: [
+        { command: 'setBrightness', name: 'Bulb brightness (1-100)', type: 'number', def: 100, role: 'level.dimmer' },
+        {
+          command: 'setColorTemp',
+          name: 'Color temperature (2700-6500)',
+          type: 'number',
+          def: 4000,
+          role: 'level.color.temperature',
+        },
+        { command: 'setColorHue', name: 'Hue (0-360)', type: 'number', def: 0, role: 'level.color.hue' },
+        {
+          command: 'setColorSaturation',
+          name: 'Saturation (0-100)',
+          type: 'number',
+          def: 100,
+          role: 'level.color.saturation',
+        },
+        { command: 'setColorMode', name: 'white or color', def: 'white', type: 'string', role: 'text' },
+      ],
+      dimmer: [
+        {
+          command: 'setDimmerBrightness',
+          name: 'Dimmer brightness (0-100)',
+          type: 'number',
+          def: 100,
+          role: 'level.dimmer',
+        },
+      ],
+      thermostat: [
+        { command: 'setTargetTemp', name: 'Target temperature', type: 'number', def: 21, role: 'level.temperature' },
+        {
+          command: 'setThermostatMode',
+          name: 'off, heat, cool, auto',
+          def: 'auto',
+          type: 'string',
+          role: 'text',
+        },
+        {
+          command: 'setThermostatFanMode',
+          name: 'auto, on, circulate',
+          def: 'auto',
+          type: 'string',
+          role: 'text',
+        },
+      ],
+      smartplug: [
+        {
+          command: 'setProperty',
+          name: 'setProperty like PowerSwitch',
+          type: 'string',
+          role: 'json',
+          def: '{"powerSwitch_1":1}',
+        },
+      ],
+    };
+
+    const remoteArray = [...remotesByCategory.common];
+
+    switch (category) {
+      case 'airfryer':
+        remoteArray.push(...remotesByCategory.switchable, ...remotesByCategory.displayLock, ...remotesByCategory.airfryer);
+        break;
+      case 'airfryer_multi':
+        remoteArray.push(
+          ...remotesByCategory.switchable,
+          ...remotesByCategory.displayLock,
+          ...remotesByCategory.airfryer,
+          ...remotesByCategory.airfryer_multi,
+        );
+        break;
+      case 'oven':
+        remoteArray.push(...remotesByCategory.switchable, ...remotesByCategory.displayLock, ...remotesByCategory.oven);
+        break;
+      case 'purifier':
+        remoteArray.push(...remotesByCategory.switchable, ...remotesByCategory.displayLock, ...remotesByCategory.purifier);
+        break;
+      case 'humidifier':
+        remoteArray.push(...remotesByCategory.switchable, ...remotesByCategory.displayLock, ...remotesByCategory.humidifier);
+        break;
+      case 'fan':
+        remoteArray.push(...remotesByCategory.switchable, ...remotesByCategory.displayLock, ...remotesByCategory.fan);
+        break;
+      case 'bulb':
+        remoteArray.push(...remotesByCategory.switchable, ...remotesByCategory.bulb);
+        break;
+      case 'dimmer':
+        remoteArray.push(...remotesByCategory.switchable, ...remotesByCategory.dimmer);
+        break;
+      case 'switch':
+      case 'outlet':
+        remoteArray.push(...remotesByCategory.switchable);
+        break;
+      case 'thermostat':
+        remoteArray.push(...remotesByCategory.thermostat);
+        break;
+      case 'smartplug':
+        remoteArray.push(...remotesByCategory.switchable, ...remotesByCategory.smartplug);
+        break;
+      case 'scale':
+        // Scales are read-only (health data); only Refresh is needed.
+        break;
+      case 'generic':
+      default:
+        // Unknown devices keep a minimal set instead of every remote.
+        remoteArray.push(...remotesByCategory.switchable);
+        this.log.warn(
+          `Unknown device category for ${device.deviceName} (${device.deviceType}/${device.configModule}). Creating minimal remotes only.`,
+        );
+        break;
+    }
+
+    return remoteArray;
+  }
+
+  /**
+   * Remove remote states that do not belong to the current device category.
+   * @param {string} deviceId
+   * @param {Set<string>} allowedCommands
+   */
+  async cleanupRemoteObjects(deviceId, allowedCommands) {
+    const remoteObjects = await this.getForeignObjectsAsync(`${this.namespace}.${deviceId}.remote.*`);
+    if (!remoteObjects) {
+      return;
+    }
+    for (const fullId of Object.keys(remoteObjects)) {
+      const command = fullId.split('.').pop();
+      if (!command || allowedCommands.has(command)) {
+        continue;
+      }
+      const localId = fullId.replace(`${this.namespace}.`, '');
+      this.log.info(`Removing unused remote object ${localId}`);
+      await this.delObjectAsync(localId);
+    }
+  }
+
   deviceIdentifier(device) {
     if (device.deviceType.startsWith('CS')) {
       return {
@@ -1015,7 +1287,7 @@ class Vesync extends utils.Adapter {
         command = command.split('-')[0];
 
         if (id.split('.')[4] === 'Refresh') {
-          this.updateDevices();
+          await this.syncDevices();
           return;
         }
 
@@ -1244,7 +1516,7 @@ class Vesync extends utils.Adapter {
         }
         this.refreshTimeout = setTimeout(async () => {
           this.log.info('Update devices');
-          await this.updateDevices();
+          await this.syncDevices();
         }, 10 * 1000);
       } else {
         const resultDict = {
