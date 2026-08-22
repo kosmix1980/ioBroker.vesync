@@ -124,6 +124,10 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.15 (2026-08-22)
+
+- VIS: status label „restl. Filterlebenszeit“ with value shown as e.g. `85 %`
+
 ### 1.0.14 (2026-08-22)
 
 - VIS: control order — Modus before Kindersicherung

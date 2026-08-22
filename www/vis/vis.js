@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.14';
+  const VIS_VERSION = '1.0.15';
   const DEFAULT_INSTANCE = 'vesync.0';
 
   const STATUS_LABELS = {
@@ -10,8 +10,8 @@
     powerSwitch_1: 'Power',
     mode: 'Modus',
     level: 'Stufe',
-    filter_life: 'Filter %',
-    filterLife: 'Filter %',
+    filter_life: 'restl. Filterlebenszeit',
+    filterLife: 'restl. Filterlebenszeit',
     air_quality_value: 'Luftqualität',
     air_quality: 'Luftqualität',
     pm25: 'PM2.5',
@@ -197,10 +197,15 @@
     el.connection.className = `vis-badge ${online ? 'vis-badge-online' : 'vis-badge-offline'}`;
   }
 
-  function formatValue(val) {
+  function formatValue(val, key) {
     if (typeof val === 'boolean') return val ? 'An' : 'Aus';
-    if (typeof val === 'number') return Number.isInteger(val) ? String(val) : val.toFixed(1);
+    if (typeof val === 'number') {
+      const formatted = Number.isInteger(val) ? String(val) : val.toFixed(1);
+      if (key === 'filter_life' || key === 'filterLife') return `${formatted} %`;
+      return formatted;
+    }
     if (val == null || val === '') return '—';
+    if ((key === 'filter_life' || key === 'filterLife') && val !== '—') return `${val} %`;
     return String(val);
   }
 
@@ -371,7 +376,7 @@
       .map(
         ([k, v]) => `<div class="vis-status-tile">
           <div class="vis-status-label">${escapeHtml(statusLabel(k))}</div>
-          <div class="vis-status-value">${escapeHtml(formatValue(v))}</div>
+          <div class="vis-status-value">${escapeHtml(formatValue(v, k))}</div>
         </div>`,
       )
       .join('');
