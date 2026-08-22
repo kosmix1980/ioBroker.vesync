@@ -124,6 +124,10 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.14 (2026-08-22)
+
+- VIS: control order — Modus before Kindersicherung
+
 ### 1.0.13 (2026-08-22)
 
 - VIS: short German labels for controls (Ein/Aus, Modus, Stärke, …)

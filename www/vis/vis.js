@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.13';
+  const VIS_VERSION = '1.0.14';
   const DEFAULT_INSTANCE = 'vesync.0';
 
   const STATUS_LABELS = {
@@ -111,6 +111,35 @@
     endCook: 'Kochen beenden',
     skipStep: 'Schritt überspringen',
   };
+
+  const REMOTE_ORDER = [
+    'setSwitch',
+    'setDisplay',
+    'setPurifierMode',
+    'setHumidityMode',
+    'setFanMode',
+    'setChildLock',
+    'setLevel-wind',
+    'setLevel-mist',
+    'setLevel-warm',
+    'setTargetHumidity',
+    'setFanSpeed',
+    'setNightLight',
+    'setOscillation',
+    'setBrightness',
+    'setDimmerBrightness',
+    'setColorMode',
+    'setColorTemp',
+    'setColorHue',
+    'setColorSaturation',
+    'setThermostatMode',
+    'setThermostatFanMode',
+    'setTargetTemp',
+    'setTempUnit',
+    'setLightSwitch',
+    'endCook',
+    'skipStep',
+  ];
 
   const SKIP_REMOTES = new Set([
     'Refresh',
@@ -347,7 +376,7 @@
       )
       .join('');
 
-    const controlsHtml = Object.entries(device.remotes)
+    const controlsHtml = sortRemoteEntries(Object.entries(device.remotes))
       .filter(([cmd]) => !SKIP_REMOTES.has(cmd))
       .map(([cmd, remote]) => renderControl(device, cmd, remote))
       .join('');
@@ -360,6 +389,17 @@
     `;
 
     bindControls(device.cid);
+  }
+
+  function sortRemoteEntries(entries) {
+    return entries.sort(([a], [b]) => {
+      const indexA = REMOTE_ORDER.indexOf(a);
+      const indexB = REMOTE_ORDER.indexOf(b);
+      if (indexA === -1 && indexB === -1) return a.localeCompare(b, 'de');
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
   }
 
   function isPurifier(device) {

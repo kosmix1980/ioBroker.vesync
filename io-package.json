@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.13",
+    "version": "1.0.14",
     "news": {
+      "1.0.14": {
+        "en": "VIS: reorder controls (Modus before Kindersicherung)",
+        "de": "VIS: Reihenfolge angepasst (Modus vor Kindersicherung)"
+      },
       "1.0.13": {
         "en": "VIS: German labels for controls, hide Refresh remote",
         "de": "VIS: Deutsche Bezeichnungen für Steuerungen, Refresh ausgeblendet"
