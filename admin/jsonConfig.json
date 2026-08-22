@@ -1,5 +1,10 @@
 {
   "i18n": false,
+  "type": "panel",
+  "label": {
+    "en": "VeSync settings",
+    "de": "VeSync-Einstellungen"
+  },
   "items": {
     "username": {
       "type": "text",

@@ -124,6 +124,10 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.8 (2026-08-22)
+
+- Fix admin jsonConfig validation warning (add root `type: panel`)
+
 ### 1.0.7 (2026-08-22)
 
 - Fix VIS URL: use `/vesync/vis/index.html` on web adapter port 8082

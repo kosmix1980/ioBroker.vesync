@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "news": {
+      "1.0.8": {
+        "en": "Fix invalid admin jsonConfig schema (missing root type)",
+        "de": "Ungültige Admin-jsonConfig behoben (fehlender Root-Typ)"
+      },
       "1.0.7": {
         "en": "Fix VIS URL path (/vesync/vis/ instead of /adapter/vesync.0/vis/)",
         "de": "VIS-URL korrigiert (/vesync/vis/ statt /adapter/vesync.0/vis/)"
