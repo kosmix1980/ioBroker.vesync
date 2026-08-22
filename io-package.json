@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.12",
+    "version": "1.0.13",
     "news": {
+      "1.0.13": {
+        "en": "VIS: German labels for controls, hide Refresh remote",
+        "de": "VIS: Deutsche Bezeichnungen für Steuerungen, Refresh ausgeblendet"
+      },
       "1.0.12": {
         "en": "Fix Core300S detection (LAP-C302), VIS reads limits from adapter objects, cache bust",
         "de": "Core300S-Erkennung (LAP-C302) behoben, VIS nutzt Adapter-Limits, Cache-Busting"

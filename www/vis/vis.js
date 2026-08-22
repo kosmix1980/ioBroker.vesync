@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.12';
+  const VIS_VERSION = '1.0.13';
   const DEFAULT_INSTANCE = 'vesync.0';
 
   const STATUS_LABELS = {
@@ -83,7 +83,37 @@
     ],
   };
 
+  const REMOTE_LABELS = {
+    setSwitch: 'ein/aus',
+    setDisplay: 'Display',
+    setChildLock: 'Kindersicherung',
+    setPurifierMode: 'Modus',
+    'setLevel-wind': 'Stärke',
+    setHumidityMode: 'Modus',
+    setTargetHumidity: 'Ziel-Feuchte',
+    'setLevel-mist': 'Nebelstärke',
+    'setLevel-warm': 'Warmstufe',
+    setNightLight: 'Nachtlicht',
+    setFanMode: 'Modus',
+    setFanSpeed: 'Geschwindigkeit',
+    setOscillation: 'Oszillation',
+    setBrightness: 'Helligkeit',
+    setColorTemp: 'Farbtemperatur',
+    setColorHue: 'Farbton',
+    setColorSaturation: 'Sättigung',
+    setColorMode: 'Farbmodus',
+    setDimmerBrightness: 'Helligkeit',
+    setThermostatMode: 'Modus',
+    setThermostatFanMode: 'Lüfter',
+    setTargetTemp: 'Ziel-Temperatur',
+    setTempUnit: 'Temperatureinheit',
+    setLightSwitch: 'Licht',
+    endCook: 'Kochen beenden',
+    skipStep: 'Schritt überspringen',
+  };
+
   const SKIP_REMOTES = new Set([
+    'Refresh',
     'startCook',
     'cookMode',
     'startMultiCook',
@@ -358,22 +388,17 @@
     return SELECT_OPTIONS[cmd] || null;
   }
 
-  function getControlLabel(cmd, remote) {
-    return remote.stateId || `${instance}.${remote.cid || '?'}.remote.${cmd}`;
+  function getControlLabel(cmd) {
+    return REMOTE_LABELS[cmd] || cmd;
   }
 
   function renderControl(device, cmd, remote) {
     const cid = device.cid;
     const common = remote.object || {};
-    const label = getControlLabel(cmd, remote);
+    const label = getControlLabel(cmd);
     const val = remote.val;
     const type = common.type || 'boolean';
     const role = common.role || '';
-
-    if (cmd === 'Refresh') {
-      return `<div class="vis-control"><span class="vis-control-label">${escapeHtml(label)}</span>
-        <button type="button" class="vis-btn vis-btn-outline vis-touch-sm vis-action-btn" data-action="pulse" data-cid="${escapeHtml(cid)}" data-cmd="${escapeHtml(cmd)}">Ausführen</button></div>`;
-    }
 
     if (type === 'boolean' || role === 'switch') {
       const on = val === true || val === 1 || val === 'true';

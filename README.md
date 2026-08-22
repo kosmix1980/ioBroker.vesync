@@ -124,6 +124,11 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.13 (2026-08-22)
+
+- VIS: short German labels for controls (Ein/Aus, Modus, Stärke, …)
+- VIS: Refresh remote hidden from control list
+
 ### 1.0.12 (2026-08-22)
 
 - Fix Core300S detection for LAP-C302S and similar model IDs
