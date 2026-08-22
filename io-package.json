@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "news": {
+      "1.0.7": {
+        "en": "Fix VIS URL path (/vesync/vis/ instead of /adapter/vesync.0/vis/)",
+        "de": "VIS-URL korrigiert (/vesync/vis/ statt /adapter/vesync.0/vis/)"
+      },
       "1.0.6": {
         "en": "Add standalone VIS panel (1024×535) for device settings and controls",
         "de": "Eigenständige VIS-Oberfläche (1024×535) für Geräteeinstellungen und Steuerung"
@@ -134,7 +138,7 @@
     "adminUI": {
       "config": "json"
     },
-    "localLink": "/adapter/vesync.0/vis/index.html",
+    "localLink": "/vesync/vis/index.html",
     "dependencies": [
       {
         "js-controller": ">=3.3.22"
