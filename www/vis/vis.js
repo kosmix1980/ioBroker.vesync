@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.11';
+  const VIS_VERSION = '1.0.12';
   const DEFAULT_INSTANCE = 'vesync.0';
 
   const STATUS_LABELS = {
@@ -184,6 +184,7 @@
         devices[cid].remotes[parts[4]] = {
           val: st.val,
           stateId: id,
+          cid,
           object: objects[id]?.common || {},
         };
       }
@@ -226,16 +227,16 @@
     const name = String(meta?.deviceName || '').toUpperCase();
     const id = `${type} ${config} ${name}`;
 
-    if (/CORE\s*200|LAP-C201|C201/.test(id)) {
+    if (/CORE\s*200|CORE200|LAP-C20[0-9]|C201/.test(id)) {
       return { modes: ['manual', 'auto', 'sleep'], windMax: 3, nightLight: false };
     }
-    if (/CORE\s*300|LAP-C301|C301/.test(id)) {
+    if (/CORE\s*300|CORE300|LAP-C30[0-9]|C301|C302/.test(id)) {
       return { modes: ['manual', 'auto', 'sleep'], windMax: 3, nightLight: false };
     }
-    if (/CORE\s*400|LAP-C401|C401/.test(id)) {
+    if (/CORE\s*400|CORE400|LAP-C40[0-9]|C401/.test(id)) {
       return { modes: ['manual', 'auto', 'sleep'], windMax: 4, nightLight: true };
     }
-    if (/CORE\s*600|LAP-C601|C601/.test(id)) {
+    if (/CORE\s*600|CORE600|LAP-C60[0-9]|C601/.test(id)) {
       return { modes: ['manual', 'auto', 'sleep'], windMax: 4, nightLight: true };
     }
     if (/VITAL|100S|200S/.test(id)) {
@@ -331,26 +332,40 @@
     bindControls(device.cid);
   }
 
-  function getSelectOptions(cmd, device) {
+  function isPurifier(device) {
+    const deviceType = String(device.deviceType || device.meta?.deviceType || '');
+    return categoryLabel(deviceType) === 'Luftreiniger';
+  }
+
+  function getSelectOptions(cmd, device, remote) {
+    const common = remote?.object || {};
+    if (common.states && typeof common.states === 'object' && !Array.isArray(common.states)) {
+      return Object.entries(common.states).map(([value, text]) => [value, String(text)]);
+    }
+
     if (cmd === 'setPurifierMode') {
       const profile = getPurifierProfile(device.deviceType, device.meta);
       const modeLabels = {
-        manual: 'Manuell',
-        auto: 'Auto',
-        sleep: 'Sleep',
-        pet: 'Pet',
-        turbo: 'Turbo',
-        pollen: 'Pollen',
+        manual: 'manual',
+        auto: 'auto',
+        sleep: 'sleep',
+        pet: 'pet',
+        turbo: 'turbo',
+        pollen: 'pollen',
       };
       return profile.modes.map((value) => [value, modeLabels[value] || value]);
     }
     return SELECT_OPTIONS[cmd] || null;
   }
 
+  function getControlLabel(cmd, remote) {
+    return remote.stateId || `${instance}.${remote.cid || '?'}.remote.${cmd}`;
+  }
+
   function renderControl(device, cmd, remote) {
     const cid = device.cid;
     const common = remote.object || {};
-    const label = remote.stateId || `${instance}.${cid}.remote.${cmd}`;
+    const label = getControlLabel(cmd, remote);
     const val = remote.val;
     const type = common.type || 'boolean';
     const role = common.role || '';
@@ -366,7 +381,7 @@
         <label class="vis-switch"><input type="checkbox" data-action="switch" data-cid="${escapeHtml(cid)}" data-cmd="${escapeHtml(cmd)}" ${on ? 'checked' : ''}><span class="vis-switch-slider"></span></label></div>`;
     }
 
-    const selectOptions = getSelectOptions(cmd, device);
+    const selectOptions = getSelectOptions(cmd, device, remote);
     if (selectOptions) {
       const opts = selectOptions
         .map(
@@ -379,11 +394,10 @@
     }
 
     if (type === 'number' || role.startsWith('level')) {
-      let min = 1;
-      let max = '';
-      if (cmd === 'setLevel-wind') {
-        const profile = getPurifierProfile(device.deviceType, device.meta);
-        max = profile.windMax;
+      let min = common.min != null ? common.min : 1;
+      let max = common.max != null ? common.max : '';
+      if (max === '' && cmd === 'setLevel-wind' && isPurifier(device)) {
+        max = getPurifierProfile(device.deviceType, device.meta).windMax;
       }
       return `<div class="vis-control vis-control-column"><span class="vis-control-label">${escapeHtml(label)}</span>
         <div class="vis-input-row">
@@ -428,7 +442,12 @@
           `input[data-action="number"][data-cmd="${btn.getAttribute('data-cmd')}"]`,
         );
         if (!input) return;
-        setRemote(btn.getAttribute('data-cid'), btn.getAttribute('data-cmd'), Number(input.value));
+        let value = Number(input.value);
+        const max = input.max ? Number(input.max) : null;
+        const min = input.min ? Number(input.min) : null;
+        if (max != null && !Number.isNaN(max)) value = Math.min(value, max);
+        if (min != null && !Number.isNaN(min)) value = Math.max(value, min);
+        setRemote(btn.getAttribute('data-cid'), btn.getAttribute('data-cmd'), value);
       });
     });
 

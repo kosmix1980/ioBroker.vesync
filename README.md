@@ -124,6 +124,13 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.12 (2026-08-22)
+
+- Fix Core300S detection for LAP-C302S and similar model IDs
+- Adapter stores mode list and fan min/max in remote object metadata
+- VIS uses ioBroker state IDs and object limits (not generic names)
+- Cache busting for VIS static files after update
+
 ### 1.0.11 (2026-08-22)
 
 - VIS: control labels show full ioBroker state IDs instead of generic names

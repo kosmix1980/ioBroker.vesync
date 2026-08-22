@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.11",
+    "version": "1.0.12",
     "news": {
+      "1.0.12": {
+        "en": "Fix Core300S detection (LAP-C302), VIS reads limits from adapter objects, cache bust",
+        "de": "Core300S-Erkennung (LAP-C302) behoben, VIS nutzt Adapter-Limits, Cache-Busting"
+      },
       "1.0.11": {
         "en": "VIS shows ioBroker state IDs for controls; Core300S/Core200S purifier profile",
         "de": "VIS zeigt ioBroker-State-IDs bei Steuerungen; Core300S/Core200S Purifier-Profil"

@@ -444,16 +444,26 @@ class Vesync extends utils.Adapter {
               }
               const allowedCommands = new Set(remoteArray.map((remote) => remote.command));
               for (const remote of remoteArray) {
+                const common = {
+                  name: remote.command,
+                  type: remote.type || 'boolean',
+                  role: remote.role || 'switch',
+                  def: remote.def != null ? remote.def : false,
+                  write: true,
+                  read: true,
+                };
+                if (remote.min != null) {
+                  common.min = remote.min;
+                }
+                if (remote.max != null) {
+                  common.max = remote.max;
+                }
+                if (remote.states) {
+                  common.states = remote.states;
+                }
                 await this.extendObjectAsync(id + '.remote.' + remote.command, {
                   type: 'state',
-                  common: {
-                    name: remote.name || '',
-                    type: remote.type || 'boolean',
-                    role: remote.role || 'switch',
-                    def: remote.def != null ? remote.def : false,
-                    write: true,
-                    read: true,
-                  },
+                  common,
                   native: {},
                 });
               }
@@ -808,16 +818,16 @@ class Vesync extends utils.Adapter {
     const name = (device.deviceName || '').toUpperCase();
     const id = `${type} ${config} ${name}`;
 
-    if (/CORE\s*200|LAP-C201|C201/.test(id)) {
+    if (/CORE\s*200|CORE200|LAP-C20[0-9]|C201/.test(id)) {
       return { modes: ['manual', 'auto', 'sleep'], windMax: 3, nightLight: false };
     }
-    if (/CORE\s*300|LAP-C301|C301/.test(id)) {
+    if (/CORE\s*300|CORE300|LAP-C30[0-9]|C301|C302/.test(id)) {
       return { modes: ['manual', 'auto', 'sleep'], windMax: 3, nightLight: false };
     }
-    if (/CORE\s*400|LAP-C401|C401/.test(id)) {
+    if (/CORE\s*400|CORE400|LAP-C40[0-9]|C401/.test(id)) {
       return { modes: ['manual', 'auto', 'sleep'], windMax: 4, nightLight: true };
     }
-    if (/CORE\s*600|LAP-C601|C601/.test(id)) {
+    if (/CORE\s*600|CORE600|LAP-C60[0-9]|C601/.test(id)) {
       return { modes: ['manual', 'auto', 'sleep'], windMax: 4, nightLight: true };
     }
     if (/VITAL|100S|200S/.test(id)) {
@@ -838,29 +848,34 @@ class Vesync extends utils.Adapter {
    */
   getPurifierRemotes(device) {
     const profile = this.getPurifierProfile(device);
+    const modeStates = Object.fromEntries(profile.modes.map((mode) => [mode, mode]));
     const remotes = [
       {
         command: 'setPurifierMode',
-        name: `${profile.modes.join(', ')}`,
+        name: 'setPurifierMode',
         def: profile.modes.includes('auto') ? 'auto' : profile.modes[0],
         type: 'string',
         role: 'text',
+        states: modeStates,
       },
       {
         command: 'setLevel-wind',
-        name: `set Level Wind (1-${profile.windMax})`,
+        name: 'setLevel-wind',
         type: 'number',
         def: 1,
         role: 'level',
+        min: 1,
+        max: profile.windMax,
       },
     ];
     if (profile.nightLight) {
       remotes.push({
         command: 'setNightLight',
-        name: 'on, off, dim or auto',
+        name: 'setNightLight',
         def: 'off',
         type: 'string',
         role: 'text',
+        states: { off: 'off', on: 'on', dim: 'dim', auto: 'auto' },
       });
     }
     return remotes;
