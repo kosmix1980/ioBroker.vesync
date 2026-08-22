@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.15",
+    "version": "1.0.16",
     "news": {
+      "1.0.16": {
+        "en": "VIS: fan stage control (low/medium/high) sets mode and wind level",
+        "de": "VIS: Modus Niedrig/Mittel/Hoch steuert Modus- und Stärke-Objekt"
+      },
       "1.0.15": {
         "en": "VIS: rename filter life status label and show % after value",
         "de": "VIS: Filterlebenszeit umbenannt, % hinter dem Wert"

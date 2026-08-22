@@ -124,6 +124,10 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.16 (2026-08-22)
+
+- VIS: Modus with Niedrig/Mittel/Hoch buttons (sets `setPurifierMode` + `setLevel-wind`)
+
 ### 1.0.15 (2026-08-22)
 
 - VIS: status label „restl. Filterlebenszeit“ with value shown as e.g. `85 %`

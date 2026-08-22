@@ -318,6 +318,30 @@ body.dark {
   transform: translateX(20px);
 }
 
+.vis-control-span-2 {
+  grid-column: span 2;
+}
+
+.vis-stage-group {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.vis-stage-btn {
+  min-height: 32px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.vis-stage-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
 .vis-input,
 .vis-select {
   width: 100%;

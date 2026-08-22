@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.15';
+  const VIS_VERSION = '1.0.16';
   const DEFAULT_INSTANCE = 'vesync.0';
 
   const STATUS_LABELS = {
@@ -111,6 +111,12 @@
     endCook: 'Kochen beenden',
     skipStep: 'Schritt überspringen',
   };
+
+  const FAN_STAGES = [
+    ['niedrig', 'Niedrig', 'manual', 1],
+    ['mittel', 'Mittel', 'manual', 2],
+    ['hoch', 'Hoch', 'manual', 3],
+  ];
 
   const REMOTE_ORDER = [
     'setSwitch',
@@ -383,7 +389,13 @@
 
     const controlsHtml = sortRemoteEntries(Object.entries(device.remotes))
       .filter(([cmd]) => !SKIP_REMOTES.has(cmd))
-      .map(([cmd, remote]) => renderControl(device, cmd, remote))
+      .map(([cmd, remote]) => {
+        if (usesFanStageControl(device)) {
+          if (cmd === 'setLevel-wind') return '';
+          if (cmd === 'setPurifierMode') return renderFanStageControl(device);
+        }
+        return renderControl(device, cmd, remote);
+      })
       .join('');
 
     el.deviceDetail.innerHTML = `
@@ -410,6 +422,35 @@
   function isPurifier(device) {
     const deviceType = String(device.deviceType || device.meta?.deviceType || '');
     return categoryLabel(deviceType) === 'Luftreiniger';
+  }
+
+  function usesFanStageControl(device) {
+    if (!isPurifier(device)) return false;
+    if (!device.remotes.setPurifierMode || !device.remotes['setLevel-wind']) return false;
+    const profile = getPurifierProfile(device.deviceType, device.meta);
+    return profile.modes.includes('manual') && profile.windMax === 3;
+  }
+
+  function getFanStage(device) {
+    const mode = String(device.remotes.setPurifierMode?.val ?? '');
+    const level = Number(device.remotes['setLevel-wind']?.val);
+    for (const [stage, , stageMode, stageLevel] of FAN_STAGES) {
+      if (mode === stageMode && level === stageLevel) return stage;
+    }
+    return '';
+  }
+
+  function renderFanStageControl(device) {
+    const cid = device.cid;
+    const current = getFanStage(device);
+    const buttons = FAN_STAGES.map(
+      ([value, text]) =>
+        `<button type="button" class="vis-btn vis-stage-btn ${current === value ? 'active' : ''}" data-action="fan-stage" data-stage="${escapeHtml(value)}" data-cid="${escapeHtml(cid)}">${escapeHtml(text)}</button>`,
+    ).join('');
+    return `<div class="vis-control vis-control-column vis-control-span-2">
+      <span class="vis-control-label">Modus</span>
+      <div class="vis-stage-group">${buttons}</div>
+    </div>`;
   }
 
   function getSelectOptions(cmd, device, remote) {
@@ -521,6 +562,12 @@
       });
     });
 
+    el.deviceDetail.querySelectorAll('[data-action="fan-stage"]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        setFanStage(btn.getAttribute('data-cid'), btn.getAttribute('data-stage'));
+      });
+    });
+
     el.deviceDetail.querySelectorAll('[data-action="text-commit"]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const input = el.deviceDetail.querySelector(
@@ -532,21 +579,34 @@
     });
   }
 
-  function setRemote(cid, cmd, value) {
+  function setRemote(cid, cmd, value, callback) {
     if (!socket || !connected) {
       showError('Keine Verbindung zu ioBroker.');
+      if (callback) callback('offline');
       return;
     }
     const stateId = `${instance}.${cid}.remote.${cmd}`;
     socket.emit('setState', stateId, value, (err) => {
       if (err) {
         showError(`Steuerung fehlgeschlagen: ${err}`);
+        if (callback) callback(err);
         return;
       }
       showError('');
       if (cmd === 'Refresh') {
         setTimeout(loadAll, 1500);
       }
+      if (callback) callback(null);
+    });
+  }
+
+  function setFanStage(cid, stage) {
+    const entry = FAN_STAGES.find(([value]) => value === stage);
+    if (!entry) return;
+    const [, , mode, level] = entry;
+    setRemote(cid, 'setPurifierMode', mode, (err) => {
+      if (err) return;
+      setRemote(cid, 'setLevel-wind', level);
     });
   }
 
