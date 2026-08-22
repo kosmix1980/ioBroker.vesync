@@ -29,7 +29,7 @@ Eigenständige Touch-Oberfläche für ioBroker VIS / Fire-Tablet (nicht Teil von
 
 1. Web-Adapter muss aktiv sein
 2. Nach Adapter-Update: `iobroker upload vesync`
-3. URL (Instanz 0): `http://<ioBroker-IP>:8082/vesync/vis/index.html`
+3. URL (Instanz 0): `%web_protocol%://%ip%:%web_port%/vesync/vis/index.html` (typisch `http://<ioBroker-IP>:8082/vesync/vis/index.html`)
 4. In ioBroker VIS als **iframe**-Widget einbinden (1024×535)
 
 **Wichtig:** Nach Änderungen an `www/` unbedingt `iobroker upload vesync` ausführen, sonst sind die Dateien nicht im Web-Adapter verfügbar.
@@ -124,6 +124,10 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.9 (2026-08-22)
+
+- Fix instance VIS button: link uses web adapter (`%web_port%`, default 8082)
+
 ### 1.0.8 (2026-08-22)
 
 - Fix admin jsonConfig validation warning (add root `type: panel`)

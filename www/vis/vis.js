@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.7';
+  const VIS_VERSION = '1.0.9';
   const DEFAULT_INSTANCE = 'vesync.0';
 
   const STATUS_LABELS = {

@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "news": {
+      "1.0.9": {
+        "en": "Fix instance VIS button link to use web adapter port (8082)",
+        "de": "Instanz-VIS-Button verweist jetzt auf Web-Adapter-Port (8082)"
+      },
       "1.0.8": {
         "en": "Fix invalid admin jsonConfig schema (missing root type)",
         "de": "Ungültige Admin-jsonConfig behoben (fehlender Root-Typ)"
@@ -142,10 +146,13 @@
     "adminUI": {
       "config": "json"
     },
-    "localLink": "/vesync/vis/index.html",
+    "localLink": "%web_protocol%://%ip%:%web_port%/vesync/vis/index.html",
     "dependencies": [
       {
         "js-controller": ">=3.3.22"
+      },
+      {
+        "web": ">=4.0.0"
       }
     ],
     "globalDependencies": [
