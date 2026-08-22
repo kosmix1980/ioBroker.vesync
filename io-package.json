@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "news": {
+      "1.0.6": {
+        "en": "Add standalone VIS panel (1024×535) for device settings and controls",
+        "de": "Eigenständige VIS-Oberfläche (1024×535) für Geräteeinstellungen und Steuerung"
+      },
       "1.0.5": {
         "en": "Create only device-specific remote objects\nAuto-detect new devices on refresh/interval\nRemove unused remotes for other device types",
         "de": "Nur gerätespezifische Remote-Objekte anlegen\nNeue Geräte automatisch bei Refresh/Intervall erkennen\nNicht passende Remotes anderer Gerätetypen entfernen"
@@ -130,6 +134,7 @@
     "adminUI": {
       "config": "json"
     },
+    "localLink": "/adapter/vesync.0/vis/index.html",
     "dependencies": [
       {
         "js-controller": ">=3.3.22"

@@ -23,6 +23,17 @@ Die App Mail und Passwort eingeben.
 
 Geräte können via vesync.0.id.remote gesteuert werden
 
+## VIS-Oberfläche (1024×535)
+
+Eigenständige Touch-Oberfläche für ioBroker VIS / Fire-Tablet (nicht Teil von GartenSmart):
+
+1. Web-Adapter muss aktiv sein
+2. Nach Adapter-Update: `iobroker upload vesync`
+3. URL (Instanz 0): `http://<ioBroker-IP>:8082/adapter/vesync.0/vis/index.html`
+4. In ioBroker VIS als **iframe**-Widget einbinden (1024×535)
+
+Anzeige: Geräteliste, Live-Status, steuerbare Remotes (Ein/Aus, Modi, Stufen). Komplexe JSON-Kochbefehle bleiben über die Objekte/Scripts nutzbar.
+
 startCook Beispieles Fritten:
 
 ```
@@ -111,6 +122,10 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.6 (2026-08-22)
+
+- Add standalone VIS panel (1024×535) under `www/vis/` for device status and controls
+
 ### 1.0.5 (2026-08-10)
 
 - Only create remote objects relevant for each device type

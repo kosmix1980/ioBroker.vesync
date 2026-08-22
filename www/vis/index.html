@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1024, height=535, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>VeSync</title>
+    <link rel="stylesheet" href="vis.css" />
+  </head>
+  <body class="dark">
+    <div id="app" class="vis-root">
+      <header class="vis-header">
+        <div class="vis-header-left">
+          <h1 class="vis-title">VeSync</h1>
+          <span id="version" class="vis-version"></span>
+          <span id="connection" class="vis-badge vis-badge-muted">Verbindung…</span>
+        </div>
+        <div class="vis-header-right">
+          <button id="btn-refresh" class="vis-btn vis-btn-outline vis-touch-sm" type="button">Refresh</button>
+          <button id="btn-theme" class="vis-btn vis-btn-icon vis-touch-sm" type="button" title="Theme">☀</button>
+        </div>
+      </header>
+
+      <p id="error" class="vis-error hidden"></p>
+
+      <div class="vis-main">
+        <aside id="device-list" class="vis-device-list"></aside>
+        <section id="device-detail" class="vis-device-detail">
+          <p class="vis-empty">Geräte werden geladen…</p>
+        </section>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="vis.js"></script>
+  </body>
+</html>
