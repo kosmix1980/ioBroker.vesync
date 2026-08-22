@@ -124,6 +124,10 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.17 (2026-08-22)
+
+- VIS: Modus buttons include Auto and Sleep in addition to Niedrig/Mittel/Hoch
+
 ### 1.0.16 (2026-08-22)
 
 - VIS: Modus with Niedrig/Mittel/Hoch buttons (sets `setPurifierMode` + `setLevel-wind`)

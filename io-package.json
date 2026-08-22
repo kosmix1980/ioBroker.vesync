@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.16",
+    "version": "1.0.17",
     "news": {
+      "1.0.17": {
+        "en": "VIS: add Auto and Sleep to purifier mode buttons",
+        "de": "VIS: Auto und Sleep zu Modus-Buttons hinzugefügt"
+      },
       "1.0.16": {
         "en": "VIS: fan stage control (low/medium/high) sets mode and wind level",
         "de": "VIS: Modus Niedrig/Mittel/Hoch steuert Modus- und Stärke-Objekt"

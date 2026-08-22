@@ -112,10 +112,12 @@
     skipStep: 'Schritt überspringen',
   };
 
-  const FAN_STAGES = [
+  const PURIFIER_MODE_OPTIONS = [
     ['niedrig', 'Niedrig', 'manual', 1],
     ['mittel', 'Mittel', 'manual', 2],
     ['hoch', 'Hoch', 'manual', 3],
+    ['auto', 'Auto', 'auto', null],
+    ['sleep', 'Sleep', 'sleep', null],
   ];
 
   const REMOTE_ORDER = [
@@ -434,7 +436,11 @@
   function getFanStage(device) {
     const mode = String(device.remotes.setPurifierMode?.val ?? '');
     const level = Number(device.remotes['setLevel-wind']?.val);
-    for (const [stage, , stageMode, stageLevel] of FAN_STAGES) {
+    for (const [stage, , stageMode, stageLevel] of PURIFIER_MODE_OPTIONS) {
+      if (stageLevel == null) {
+        if (mode === stageMode) return stage;
+        continue;
+      }
       if (mode === stageMode && level === stageLevel) return stage;
     }
     return '';
@@ -443,7 +449,7 @@
   function renderFanStageControl(device) {
     const cid = device.cid;
     const current = getFanStage(device);
-    const buttons = FAN_STAGES.map(
+    const buttons = PURIFIER_MODE_OPTIONS.map(
       ([value, text]) =>
         `<button type="button" class="vis-btn vis-stage-btn ${current === value ? 'active' : ''}" data-action="fan-stage" data-stage="${escapeHtml(value)}" data-cid="${escapeHtml(cid)}">${escapeHtml(text)}</button>`,
     ).join('');
@@ -601,11 +607,12 @@
   }
 
   function setFanStage(cid, stage) {
-    const entry = FAN_STAGES.find(([value]) => value === stage);
+    const entry = PURIFIER_MODE_OPTIONS.find(([value]) => value === stage);
     if (!entry) return;
     const [, , mode, level] = entry;
     setRemote(cid, 'setPurifierMode', mode, (err) => {
       if (err) return;
+      if (level == null) return;
       setRemote(cid, 'setLevel-wind', level);
     });
   }
