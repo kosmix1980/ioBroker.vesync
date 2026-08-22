@@ -124,6 +124,16 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.11 (2026-08-22)
+
+- VIS: control labels show full ioBroker state IDs instead of generic names
+- Core300S/Core200S: purifier modes limited to manual, auto, sleep; fan level max 3
+- VIS shows device-specific mode and level options
+
+### 1.0.10 (2026-08-22)
+
+- Core300S/Core200S purifier profile (superseded by 1.0.11 release bundle)
+
 ### 1.0.9 (2026-08-22)
 
 - Fix instance VIS button: link uses web adapter (`%web_port%`, default 8082)

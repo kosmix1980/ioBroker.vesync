@@ -1,8 +1,16 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.9",
+    "version": "1.0.11",
     "news": {
+      "1.0.11": {
+        "en": "VIS shows ioBroker state IDs for controls; Core300S/Core200S purifier profile",
+        "de": "VIS zeigt ioBroker-State-IDs bei Steuerungen; Core300S/Core200S Purifier-Profil"
+      },
+      "1.0.10": {
+        "en": "Core300S/Core200S purifier profile: manual/auto/sleep modes, fan level max 3",
+        "de": "Core300S/Core200S Profil: Modi manual/auto/sleep, Lüfterstufe max. 3"
+      },
       "1.0.9": {
         "en": "Fix instance VIS button link to use web adapter port (8082)",
         "de": "Instanz-VIS-Button verweist jetzt auf Web-Adapter-Port (8082)"

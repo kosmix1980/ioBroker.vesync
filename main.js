@@ -799,6 +799,74 @@ class Vesync extends utils.Adapter {
   }
 
   /**
+   * Purifier-specific remote limits (modes, fan levels).
+   * @param {Record<string, any>} device
+   */
+  getPurifierProfile(device) {
+    const type = (device.deviceType || '').toUpperCase();
+    const config = (device.configModule || '').toUpperCase();
+    const name = (device.deviceName || '').toUpperCase();
+    const id = `${type} ${config} ${name}`;
+
+    if (/CORE\s*200|LAP-C201|C201/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep'], windMax: 3, nightLight: false };
+    }
+    if (/CORE\s*300|LAP-C301|C301/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep'], windMax: 3, nightLight: false };
+    }
+    if (/CORE\s*400|LAP-C401|C401/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep'], windMax: 4, nightLight: true };
+    }
+    if (/CORE\s*600|LAP-C601|C601/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep'], windMax: 4, nightLight: true };
+    }
+    if (/VITAL|100S|200S/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep', 'pet'], windMax: 4, nightLight: false };
+    }
+    if (/EVEREST/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep', 'turbo'], windMax: 4, nightLight: false };
+    }
+    if (/LV-PUR131|PUR131/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep'], windMax: 3, nightLight: false };
+    }
+    return { modes: ['manual', 'auto', 'sleep', 'pet', 'turbo', 'pollen'], windMax: 12, nightLight: true };
+  }
+
+  /**
+   * Build purifier remotes based on device model.
+   * @param {Record<string, any>} device
+   */
+  getPurifierRemotes(device) {
+    const profile = this.getPurifierProfile(device);
+    const remotes = [
+      {
+        command: 'setPurifierMode',
+        name: `${profile.modes.join(', ')}`,
+        def: profile.modes.includes('auto') ? 'auto' : profile.modes[0],
+        type: 'string',
+        role: 'text',
+      },
+      {
+        command: 'setLevel-wind',
+        name: `set Level Wind (1-${profile.windMax})`,
+        type: 'number',
+        def: 1,
+        role: 'level',
+      },
+    ];
+    if (profile.nightLight) {
+      remotes.push({
+        command: 'setNightLight',
+        name: 'on, off, dim or auto',
+        def: 'off',
+        type: 'string',
+        role: 'text',
+      });
+    }
+    return remotes;
+  }
+
+  /**
    * Build remote command states for a device category.
    * @param {Record<string, any>} device
    * @param {string} category
@@ -1062,7 +1130,7 @@ class Vesync extends utils.Adapter {
         remoteArray.push(...remotesByCategory.switchable, ...remotesByCategory.displayLock, ...remotesByCategory.oven);
         break;
       case 'purifier':
-        remoteArray.push(...remotesByCategory.switchable, ...remotesByCategory.displayLock, ...remotesByCategory.purifier);
+        remoteArray.push(...remotesByCategory.switchable, ...remotesByCategory.displayLock, ...this.getPurifierRemotes(device));
         break;
       case 'humidifier':
         remoteArray.push(...remotesByCategory.switchable, ...remotesByCategory.displayLock, ...remotesByCategory.humidifier);

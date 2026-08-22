@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.9';
+  const VIS_VERSION = '1.0.11';
   const DEFAULT_INSTANCE = 'vesync.0';
 
   const STATUS_LABELS = {
@@ -38,6 +38,7 @@
 
   const SELECT_OPTIONS = {
     setPurifierMode: [
+      ['manual', 'Manuell'],
       ['auto', 'Auto'],
       ['sleep', 'Sleep'],
       ['pet', 'Pet'],
@@ -182,6 +183,7 @@
       } else if (parts[3] === 'remote' && parts[4]) {
         devices[cid].remotes[parts[4]] = {
           val: st.val,
+          stateId: id,
           object: objects[id]?.common || {},
         };
       }
@@ -216,6 +218,36 @@
       if (c === 0 || c === '0' || c === 'false') return false;
     }
     return null;
+  }
+
+  function getPurifierProfile(deviceType, meta) {
+    const type = String(deviceType || meta?.deviceType || '').toUpperCase();
+    const config = String(meta?.configModule || '').toUpperCase();
+    const name = String(meta?.deviceName || '').toUpperCase();
+    const id = `${type} ${config} ${name}`;
+
+    if (/CORE\s*200|LAP-C201|C201/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep'], windMax: 3, nightLight: false };
+    }
+    if (/CORE\s*300|LAP-C301|C301/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep'], windMax: 3, nightLight: false };
+    }
+    if (/CORE\s*400|LAP-C401|C401/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep'], windMax: 4, nightLight: true };
+    }
+    if (/CORE\s*600|LAP-C601|C601/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep'], windMax: 4, nightLight: true };
+    }
+    if (/VITAL|100S|200S/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep', 'pet'], windMax: 4, nightLight: false };
+    }
+    if (/EVEREST/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep', 'turbo'], windMax: 4, nightLight: false };
+    }
+    if (/LV-PUR131|PUR131/.test(id)) {
+      return { modes: ['manual', 'auto', 'sleep'], windMax: 3, nightLight: false };
+    }
+    return { modes: ['manual', 'auto', 'sleep', 'pet', 'turbo', 'pollen'], windMax: 12, nightLight: true };
   }
 
   function categoryLabel(deviceType) {
@@ -286,7 +318,7 @@
 
     const controlsHtml = Object.entries(device.remotes)
       .filter(([cmd]) => !SKIP_REMOTES.has(cmd))
-      .map(([cmd, remote]) => renderControl(device.cid, cmd, remote))
+      .map(([cmd, remote]) => renderControl(device, cmd, remote))
       .join('');
 
     el.deviceDetail.innerHTML = `
@@ -299,9 +331,26 @@
     bindControls(device.cid);
   }
 
-  function renderControl(cid, cmd, remote) {
+  function getSelectOptions(cmd, device) {
+    if (cmd === 'setPurifierMode') {
+      const profile = getPurifierProfile(device.deviceType, device.meta);
+      const modeLabels = {
+        manual: 'Manuell',
+        auto: 'Auto',
+        sleep: 'Sleep',
+        pet: 'Pet',
+        turbo: 'Turbo',
+        pollen: 'Pollen',
+      };
+      return profile.modes.map((value) => [value, modeLabels[value] || value]);
+    }
+    return SELECT_OPTIONS[cmd] || null;
+  }
+
+  function renderControl(device, cmd, remote) {
+    const cid = device.cid;
     const common = remote.object || {};
-    const label = common.name || cmd;
+    const label = remote.stateId || `${instance}.${cid}.remote.${cmd}`;
     const val = remote.val;
     const type = common.type || 'boolean';
     const role = common.role || '';
@@ -317,8 +366,9 @@
         <label class="vis-switch"><input type="checkbox" data-action="switch" data-cid="${escapeHtml(cid)}" data-cmd="${escapeHtml(cmd)}" ${on ? 'checked' : ''}><span class="vis-switch-slider"></span></label></div>`;
     }
 
-    if (SELECT_OPTIONS[cmd]) {
-      const opts = SELECT_OPTIONS[cmd]
+    const selectOptions = getSelectOptions(cmd, device);
+    if (selectOptions) {
+      const opts = selectOptions
         .map(
           ([value, text]) =>
             `<option value="${escapeHtml(value)}" ${String(val) === value ? 'selected' : ''}>${escapeHtml(text)}</option>`,
@@ -329,9 +379,15 @@
     }
 
     if (type === 'number' || role.startsWith('level')) {
+      let min = 1;
+      let max = '';
+      if (cmd === 'setLevel-wind') {
+        const profile = getPurifierProfile(device.deviceType, device.meta);
+        max = profile.windMax;
+      }
       return `<div class="vis-control vis-control-column"><span class="vis-control-label">${escapeHtml(label)}</span>
         <div class="vis-input-row">
-          <input class="vis-input" type="number" value="${escapeHtml(String(val ?? ''))}" data-action="number" data-cid="${escapeHtml(cid)}" data-cmd="${escapeHtml(cmd)}">
+          <input class="vis-input" type="number" value="${escapeHtml(String(val ?? ''))}" min="${min}"${max ? ` max="${max}"` : ''} data-action="number" data-cid="${escapeHtml(cid)}" data-cmd="${escapeHtml(cmd)}">
           <button type="button" class="vis-btn vis-btn-outline vis-touch-sm" data-action="number-commit" data-cid="${escapeHtml(cid)}" data-cmd="${escapeHtml(cmd)}">OK</button>
         </div></div>`;
     }
