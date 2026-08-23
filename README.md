@@ -124,6 +124,11 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.27 (2026-08-23)
+
+- Add purifier timer remotes (`setTimerHours` 0–23, `setTimerMinutes` 0–59, `startTimer`, `clearTimer`)
+- VIS: timer control with hour/minute dropdowns and start/clear buttons
+
 ### 1.0.26 (2026-08-23)
 
 - VIS: fix „Filter zurücksetzen“ layout (label no longer vertical letter stack)

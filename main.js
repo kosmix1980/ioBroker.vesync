@@ -878,14 +878,139 @@ class Vesync extends utils.Adapter {
         states: { off: 'off', on: 'on', dim: 'dim', auto: 'auto' },
       });
     }
-    remotes.push({
-      command: 'resetFilter',
-      name: 'resetFilter',
-      type: 'boolean',
-      role: 'button',
-      def: false,
-    });
+    remotes.push(
+      {
+        command: 'setTimerHours',
+        name: 'setTimerHours',
+        type: 'number',
+        role: 'level',
+        def: 0,
+        min: 0,
+        max: 23,
+      },
+      {
+        command: 'setTimerMinutes',
+        name: 'setTimerMinutes',
+        type: 'number',
+        role: 'level',
+        def: 0,
+        min: 0,
+        max: 59,
+      },
+      {
+        command: 'startTimer',
+        name: 'startTimer',
+        type: 'boolean',
+        role: 'button',
+        def: false,
+      },
+      {
+        command: 'clearTimer',
+        name: 'clearTimer',
+        type: 'boolean',
+        role: 'button',
+        def: false,
+      },
+      {
+        command: 'resetFilter',
+        name: 'resetFilter',
+        type: 'boolean',
+        role: 'button',
+        def: false,
+      },
+    );
     return remotes;
+  }
+
+  /**
+   * @param {string} deviceId
+   * @returns {Record<string, any> | undefined}
+   */
+  getDeviceByCid(deviceId) {
+    return this.deviceArray.find((device) => device.cid === deviceId);
+  }
+
+  /**
+   * @param {string} deviceId
+   * @param {string} method
+   * @param {Record<string, any>} data
+   */
+  async callBypassV2(deviceId, method, data) {
+    const device = this.getDeviceByCid(deviceId);
+    return this.requestClient({
+      method: 'post',
+      url: `${this.getApiBaseUrl()}/cloud/v2/deviceManaged/bypassV2`,
+      headers: {
+        accept: '*/*',
+        'content-type': 'application/json',
+        'user-agent': VESYNC_USER_AGENT,
+        'accept-language': 'de-DE;q=1.0, uk-DE;q=0.9, en-DE;q=0.8',
+      },
+      data: JSON.stringify({
+        traceId: Date.now(),
+        debugMode: false,
+        acceptLanguage: 'de',
+        method: 'bypassV2',
+        cid: deviceId,
+        timeZone: 'Europe/Berlin',
+        accountID: this.session.accountID,
+        payload: {
+          data,
+          source: 'APP',
+          method,
+        },
+        appVersion: VESYNC_APP_VERSION_FULL,
+        deviceRegion: 'EU',
+        phoneBrand: 'iPhone 8 Plus',
+        token: this.session.token,
+        phoneOS: 'iOS 14.8',
+        configModule: device?.configModule || '',
+        userCountryCode: 'DE',
+      }),
+    });
+  }
+
+  /**
+   * @param {string} deviceId
+   * @param {'startTimer' | 'clearTimer'} command
+   */
+  async handlePurifierTimerCommand(deviceId, command) {
+    try {
+      if (command === 'startTimer') {
+        const hoursState = await this.getStateAsync(`${deviceId}.remote.setTimerHours`);
+        const minutesState = await this.getStateAsync(`${deviceId}.remote.setTimerMinutes`);
+        const hours = Number(hoursState?.val) || 0;
+        const minutes = Number(minutesState?.val) || 0;
+        const total = hours * 3600 + minutes * 60;
+        if (total <= 0) {
+          this.log.warn(`Timer duration must be > 0 for ${deviceId}`);
+          await this.setStateAsync(`${deviceId}.remote.startTimer`, false, true);
+          return;
+        }
+        const res = await this.callBypassV2(deviceId, 'addTimer', { action: 'off', total });
+        this.log.info(JSON.stringify(res.data));
+        await this.setStateAsync(`${deviceId}.remote.startTimer`, false, true);
+        return;
+      }
+
+      const getRes = await this.callBypassV2(deviceId, 'getTimer', {});
+      const payload = getRes.data?.result;
+      const result = payload?.result || payload;
+      const timers = result?.timers;
+      const timerId = Array.isArray(timers) && timers.length > 0 ? timers[0].id : null;
+      if (!timerId) {
+        this.log.warn(`No active timer for ${deviceId}`);
+        await this.setStateAsync(`${deviceId}.remote.clearTimer`, false, true);
+        return;
+      }
+      const delRes = await this.callBypassV2(deviceId, 'delTimer', { id: timerId });
+      this.log.info(JSON.stringify(delRes.data));
+      await this.setStateAsync(`${deviceId}.remote.clearTimer`, false, true);
+    } catch (error) {
+      this.log.error(error);
+      error.response && this.log.error(JSON.stringify(error.response.data));
+      await this.setStateAsync(`${deviceId}.remote.${command}`, false, true);
+    }
   }
 
   /**
@@ -1381,7 +1506,16 @@ class Vesync extends utils.Adapter {
           return;
         }
 
-        if (command === 'resetFilter' && !state.val) {
+        if ((command === 'resetFilter' || command === 'startTimer' || command === 'clearTimer') && !state.val) {
+          return;
+        }
+
+        if (command === 'startTimer' || command === 'clearTimer') {
+          await this.handlePurifierTimerCommand(deviceId, command);
+          this.refreshTimeout = setTimeout(async () => {
+            this.log.info('Update devices');
+            await this.syncDevices();
+          }, 10 * 1000);
           return;
         }
 

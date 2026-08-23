@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.26';
+  const VIS_VERSION = '1.0.27';
   const DEFAULT_INSTANCE = 'vesync.0';
   const THEME_STORAGE_KEY = 'vesync-vis-theme';
 
@@ -31,6 +31,8 @@
     workMode: 'Modus',
     fanMode: 'Lüfter',
     targetTemp: 'Ziel-Temp.',
+    timerRemain: 'Timer Rest',
+    timer_remain: 'Timer Rest',
   };
 
   const SELECT_OPTIONS = {
@@ -105,6 +107,10 @@
     setTargetTemp: 'Ziel-Temperatur',
     setTempUnit: 'Temperatureinheit',
     setLightSwitch: 'Licht',
+    setTimerHours: 'Stunden',
+    setTimerMinutes: 'Minuten',
+    startTimer: 'Timer starten',
+    clearTimer: 'Timer löschen',
     resetFilter: 'Filter zurücksetzen',
     endCook: 'Kochen beenden',
     skipStep: 'Schritt überspringen',
@@ -142,12 +148,18 @@
     'setTargetTemp',
     'setTempUnit',
     'setLightSwitch',
+    'setTimerHours',
+    'setTimerMinutes',
+    'startTimer',
+    'clearTimer',
     'resetFilter',
     'endCook',
     'skipStep',
   ];
 
   const HEADER_REMOTES = new Set(['setSwitch']);
+
+  const TIMER_REMOTES = new Set(['setTimerHours', 'setTimerMinutes', 'startTimer', 'clearTimer']);
 
   const SKIP_REMOTES = new Set([
     'Refresh',
@@ -424,6 +436,12 @@
     const controlsHtml = sortRemoteEntries(Object.entries(device.remotes))
       .filter(([cmd]) => !SKIP_REMOTES.has(cmd) && !HEADER_REMOTES.has(cmd))
       .map(([cmd, remote]) => {
+        if (hasTimerControl(device)) {
+          if (TIMER_REMOTES.has(cmd)) {
+            if (cmd === 'setTimerHours') return renderTimerControl(device);
+            return '';
+          }
+        }
         if (usesFanStageControl(device)) {
           if (cmd === 'setLevel-wind') return '';
           if (cmd === 'setPurifierMode') return renderFanStageControl(device);
@@ -468,6 +486,54 @@
     if (!device.remotes.setPurifierMode || !device.remotes['setLevel-wind']) return false;
     const profile = getPurifierProfile(device.deviceType, device.meta);
     return profile.modes.includes('manual') && profile.windMax === 3;
+  }
+
+  function hasTimerControl(device) {
+    return isPurifier(device) && device.remotes.setTimerHours && device.remotes.setTimerMinutes;
+  }
+
+  function getTimerRemain(device) {
+    for (const key of ['timerRemain', 'timer_remain', 'extension.timerRemain', 'extension.timer_remain']) {
+      const value = device.status[key];
+      if (value != null && value !== '') return Number(value);
+    }
+    return null;
+  }
+
+  function formatTimerSeconds(totalSec) {
+    const seconds = Number(totalSec);
+    if (!seconds || seconds <= 0) return '—';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    if (hours > 0) {
+      return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+    return `${minutes}:${String(secs).padStart(2, '0')}`;
+  }
+
+  function renderTimerControl(device) {
+    const cid = device.cid;
+    const hours = Number(device.remotes.setTimerHours?.val ?? 0);
+    const minutes = Number(device.remotes.setTimerMinutes?.val ?? 0);
+    const remainText = formatTimerSeconds(getTimerRemain(device));
+    const hourOpts = Array.from({ length: 24 }, (_, value) => {
+      return `<option value="${value}" ${hours === value ? 'selected' : ''}>${value} h</option>`;
+    }).join('');
+    const minuteOpts = Array.from({ length: 60 }, (_, value) => {
+      return `<option value="${value}" ${minutes === value ? 'selected' : ''}>${value} min</option>`;
+    }).join('');
+    return `<div class="vis-control vis-control-column vis-control-span-2">
+      <span class="vis-control-label">Timer · Rest: ${escapeHtml(remainText)}</span>
+      <div class="vis-timer-row">
+        <select class="vis-select vis-timer-select" data-action="timer-hours" data-cid="${escapeHtml(cid)}">${hourOpts}</select>
+        <select class="vis-select vis-timer-select" data-action="timer-minutes" data-cid="${escapeHtml(cid)}">${minuteOpts}</select>
+      </div>
+      <div class="vis-timer-actions">
+        <button type="button" class="vis-btn vis-btn-outline vis-touch-sm" data-action="timer-start" data-cid="${escapeHtml(cid)}">Starten</button>
+        <button type="button" class="vis-btn vis-btn-outline vis-touch-sm" data-action="timer-clear" data-cid="${escapeHtml(cid)}">Löschen</button>
+      </div>
+    </div>`;
   }
 
   function getFanStage(device) {
@@ -618,6 +684,30 @@
       });
     });
 
+    el.deviceDetail.querySelectorAll('[data-action="timer-hours"]').forEach((select) => {
+      select.addEventListener('change', () => {
+        setRemote(select.getAttribute('data-cid'), 'setTimerHours', Number(select.value));
+      });
+    });
+
+    el.deviceDetail.querySelectorAll('[data-action="timer-minutes"]').forEach((select) => {
+      select.addEventListener('change', () => {
+        setRemote(select.getAttribute('data-cid'), 'setTimerMinutes', Number(select.value));
+      });
+    });
+
+    el.deviceDetail.querySelectorAll('[data-action="timer-start"]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        startTimer(btn.getAttribute('data-cid'));
+      });
+    });
+
+    el.deviceDetail.querySelectorAll('[data-action="timer-clear"]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        setRemote(btn.getAttribute('data-cid'), 'clearTimer', true, () => setTimeout(loadAll, 1500));
+      });
+    });
+
     el.deviceDetail.querySelectorAll('[data-action="text-commit"]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const input = el.deviceDetail.querySelector(
@@ -643,10 +733,28 @@
         return;
       }
       showError('');
-      if (cmd === 'Refresh' || cmd === 'resetFilter') {
+      if (cmd === 'Refresh' || cmd === 'resetFilter' || cmd === 'startTimer' || cmd === 'clearTimer') {
         setTimeout(loadAll, 1500);
       }
       if (callback) callback(null);
+    });
+  }
+
+  function startTimer(cid) {
+    const hoursSelect = el.deviceDetail.querySelector(`select[data-action="timer-hours"][data-cid="${cid}"]`);
+    const minutesSelect = el.deviceDetail.querySelector(`select[data-action="timer-minutes"][data-cid="${cid}"]`);
+    const hours = Number(hoursSelect?.value ?? 0);
+    const minutes = Number(minutesSelect?.value ?? 0);
+    if (hours === 0 && minutes === 0) {
+      showError('Bitte mindestens 1 Minute wählen.');
+      return;
+    }
+    setRemote(cid, 'setTimerHours', hours, (err) => {
+      if (err) return;
+      setRemote(cid, 'setTimerMinutes', minutes, (err2) => {
+        if (err2) return;
+        setRemote(cid, 'startTimer', true, () => setTimeout(loadAll, 1500));
+      });
     });
   }
 

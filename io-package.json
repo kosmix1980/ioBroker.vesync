@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.26",
+    "version": "1.0.27",
     "news": {
+      "1.0.27": {
+        "en": "Add purifier timer (hours 0-23, minutes 0-59) with VIS control",
+        "de": "Timer für Luftreiniger (Stunden 0-23, Minuten 0-59) mit VIS-Steuerung"
+      },
       "1.0.26": {
         "en": "VIS: fix Filter zurücksetzen layout (column instead of squeezed row)",
         "de": "VIS: Layout von Filter zurücksetzen korrigiert"
