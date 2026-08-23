@@ -124,6 +124,10 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.19 (2026-08-23)
+
+- VIS: Luftqualität = Stufe (gut/mittel/schlecht), PM2.5 = Messwert
+
 ### 1.0.18 (2026-08-23)
 
 - VIS: no-cache headers on index.html so updates show without stale browser cache

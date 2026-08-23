@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.18",
+    "version": "1.0.19",
     "news": {
+      "1.0.19": {
+        "en": "VIS: split air quality labels (level as gut/mittel/schlecht, PM2.5 value)",
+        "de": "VIS: Luftqualität getrennt (Stufe gut/mittel/schlecht, PM2.5-Wert)"
+      },
       "1.0.18": {
         "en": "VIS: prevent stale cache of index.html after updates",
         "de": "VIS: veralteten Browser-Cache von index.html nach Updates verhindern"

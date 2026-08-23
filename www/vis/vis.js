@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.18';
+  const VIS_VERSION = '1.0.19';
   const DEFAULT_INSTANCE = 'vesync.0';
 
   const STATUS_LABELS = {
@@ -12,8 +12,8 @@
     level: 'Stufe',
     filter_life: 'restl. Filterlebenszeit',
     filterLife: 'restl. Filterlebenszeit',
-    air_quality_value: 'Luftqualität',
     air_quality: 'Luftqualität',
+    air_quality_value: 'PM2.5',
     pm25: 'PM2.5',
     humidity: 'Feuchte %',
     humidity_level: 'Feuchte',
@@ -207,6 +207,11 @@
 
   function formatValue(val, key) {
     if (typeof val === 'boolean') return val ? 'An' : 'Aus';
+    if (key === 'air_quality') {
+      const map = { 1: 'gut', 2: 'mittel', 3: 'schlecht' };
+      const mapped = map[val] ?? map[Number(val)];
+      if (mapped) return mapped;
+    }
     if (typeof val === 'number') {
       const formatted = Number.isInteger(val) ? String(val) : val.toFixed(1);
       if (key === 'filter_life' || key === 'filterLife') return `${formatted} %`;
