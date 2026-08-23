@@ -124,6 +124,10 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.25 (2026-08-23)
+
+- VIS: fix label wrapping so „Filter zurücksetzen“ displays horizontally
+
 ### 1.0.24 (2026-08-23)
 
 - VIS: air_quality mapped to 4 levels (sehr gut, gut, mittel, schlecht)

@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.24",
+    "version": "1.0.25",
     "news": {
+      "1.0.25": {
+        "en": "VIS: fix vertical label wrapping for Filter zurücksetzen",
+        "de": "VIS: vertikale Textumbruch bei Filter zurücksetzen behoben"
+      },
       "1.0.24": {
         "en": "VIS: map air_quality to 4 levels (sehr gut/gut/mittel/schlecht)",
         "de": "VIS: Luftqualität mit 4 Stufen (sehr gut/gut/mittel/schlecht)"
