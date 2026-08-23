@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.25",
+    "version": "1.0.26",
     "news": {
+      "1.0.26": {
+        "en": "VIS: fix Filter zurücksetzen layout (column instead of squeezed row)",
+        "de": "VIS: Layout von Filter zurücksetzen korrigiert"
+      },
       "1.0.25": {
         "en": "VIS: fix vertical label wrapping for Filter zurücksetzen",
         "de": "VIS: vertikale Textumbruch bei Filter zurücksetzen behoben"

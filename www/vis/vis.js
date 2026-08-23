@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.25';
+  const VIS_VERSION = '1.0.26';
   const DEFAULT_INSTANCE = 'vesync.0';
   const THEME_STORAGE_KEY = 'vesync-vis-theme';
 
@@ -530,8 +530,10 @@
     const role = common.role || '';
 
     if (cmd === 'resetFilter' || role === 'button') {
-      return `<div class="vis-control vis-control-span-2"><span class="vis-control-label">${escapeHtml(label)}</span>
-        <button type="button" class="vis-btn vis-btn-outline vis-touch-sm vis-action-btn" data-action="pulse" data-cid="${escapeHtml(cid)}" data-cmd="${escapeHtml(cmd)}">Ausführen</button></div>`;
+      return `<div class="vis-control vis-control-column vis-control-span-2">
+        <span class="vis-control-label">${escapeHtml(label)}</span>
+        <button type="button" class="vis-btn vis-btn-outline vis-touch-sm" data-action="pulse" data-cid="${escapeHtml(cid)}" data-cmd="${escapeHtml(cmd)}">Ausführen</button>
+      </div>`;
     }
 
     if (type === 'boolean' || role === 'switch') {

@@ -124,6 +124,10 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.26 (2026-08-23)
+
+- VIS: fix „Filter zurücksetzen“ layout (label no longer vertical letter stack)
+
 ### 1.0.25 (2026-08-23)
 
 - VIS: fix label wrapping so „Filter zurücksetzen“ displays horizontally
