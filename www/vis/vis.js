@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.23';
+  const VIS_VERSION = '1.0.24';
   const DEFAULT_INSTANCE = 'vesync.0';
   const THEME_STORAGE_KEY = 'vesync-vis-theme';
 
@@ -238,7 +238,7 @@
   function formatValue(val, key) {
     if (typeof val === 'boolean') return val ? 'An' : 'Aus';
     if (key === 'air_quality') {
-      const map = { 1: 'gut', 2: 'mittel', 3: 'schlecht' };
+      const map = { 1: 'sehr gut', 2: 'gut', 3: 'mittel', 4: 'schlecht' };
       const mapped = map[val] ?? map[Number(val)];
       if (mapped) return mapped;
     }

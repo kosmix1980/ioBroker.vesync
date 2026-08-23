@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.23",
+    "version": "1.0.24",
     "news": {
+      "1.0.24": {
+        "en": "VIS: map air_quality to 4 levels (sehr gut/gut/mittel/schlecht)",
+        "de": "VIS: Luftqualität mit 4 Stufen (sehr gut/gut/mittel/schlecht)"
+      },
       "1.0.23": {
         "en": "Add resetFilter remote for purifiers (VeSync resetFilter API)",
         "de": "resetFilter-Remote für Luftreiniger hinzugefügt (Filter zurücksetzen)"
