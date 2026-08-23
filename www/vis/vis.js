@@ -2,11 +2,10 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.19';
+  const VIS_VERSION = '1.0.20';
   const DEFAULT_INSTANCE = 'vesync.0';
 
   const STATUS_LABELS = {
-    enabled: 'Ein',
     powerSwitch_1: 'Power',
     mode: 'Modus',
     level: 'Stufe',
@@ -21,8 +20,6 @@
     auto_target_humidity: 'Ziel-Feuchte',
     temperature: 'Temp.',
     temp: 'Temp.',
-    display: 'Display',
-    child_lock: 'Kindersicherung',
     cookStatus: 'Kochstatus',
     cookSetTemp: 'Soll-Temp.',
     cookSetTime: 'Soll-Zeit',
@@ -121,12 +118,11 @@
   ];
 
   const REMOTE_ORDER = [
-    'setSwitch',
+    'setChildLock',
     'setDisplay',
     'setPurifierMode',
     'setHumidityMode',
     'setFanMode',
-    'setChildLock',
     'setLevel-wind',
     'setLevel-mist',
     'setLevel-warm',
@@ -148,6 +144,8 @@
     'endCook',
     'skipStep',
   ];
+
+  const HEADER_REMOTES = new Set(['setSwitch']);
 
   const SKIP_REMOTES = new Set([
     'Refresh',
@@ -287,17 +285,6 @@
     return out;
   }
 
-  function isEnabled(device) {
-    const s = device.status;
-    const candidates = [s.enabled, s.powerSwitch_1, device.remotes.setSwitch?.val];
-    for (const c of candidates) {
-      if (typeof c === 'boolean') return c;
-      if (c === 1 || c === '1' || c === 'true') return true;
-      if (c === 0 || c === '0' || c === 'false') return false;
-    }
-    return null;
-  }
-
   function getPurifierProfile(deviceType, meta) {
     const type = String(deviceType || meta?.deviceType || '').toUpperCase();
     const config = String(meta?.configModule || '').toUpperCase();
@@ -355,12 +342,10 @@
 
     el.deviceList.innerHTML = devices
       .map((d) => {
-        const enabled = isEnabled(d);
         return `<button type="button" class="vis-device-item ${d.cid === selectedCid ? 'active' : ''}" data-cid="${escapeHtml(d.cid)}">
           <div class="vis-device-name">${escapeHtml(d.name)}</div>
           <div class="vis-device-meta">
             <span>${escapeHtml(categoryLabel(d.deviceType || d.meta.deviceType))}</span>
-            <span>${enabled == null ? '' : enabled ? 'An' : 'Aus'}</span>
           </div>
         </button>`;
       })
@@ -375,6 +360,16 @@
     });
 
     renderDetail(devices.find((d) => d.cid === selectedCid));
+  }
+
+  function renderPowerHeader(device) {
+    const remote = device.remotes.setSwitch;
+    if (!remote) return '';
+    const on = remote.val === true || remote.val === 1 || remote.val === 'true';
+    return `<div class="vis-detail-power">
+      <span class="vis-control-label">ein/aus</span>
+      <label class="vis-switch"><input type="checkbox" data-action="switch" data-cid="${escapeHtml(device.cid)}" data-cmd="setSwitch" ${on ? 'checked' : ''}><span class="vis-switch-slider"></span></label>
+    </div>`;
   }
 
   function renderDetail(device) {
@@ -395,7 +390,7 @@
       .join('');
 
     const controlsHtml = sortRemoteEntries(Object.entries(device.remotes))
-      .filter(([cmd]) => !SKIP_REMOTES.has(cmd))
+      .filter(([cmd]) => !SKIP_REMOTES.has(cmd) && !HEADER_REMOTES.has(cmd))
       .map(([cmd, remote]) => {
         if (usesFanStageControl(device)) {
           if (cmd === 'setLevel-wind') return '';
@@ -406,8 +401,13 @@
       .join('');
 
     el.deviceDetail.innerHTML = `
-      <h2 class="vis-detail-title">${escapeHtml(device.name)}</h2>
-      <p class="vis-detail-sub">${escapeHtml(categoryLabel(device.deviceType || device.meta.deviceType))}${device.deviceType || device.meta.deviceType ? ` · ${escapeHtml(String(device.deviceType || device.meta.deviceType))}` : ''}</p>
+      <div class="vis-detail-header">
+        <div class="vis-detail-header-text">
+          <h2 class="vis-detail-title">${escapeHtml(device.name)}</h2>
+          <p class="vis-detail-sub">${escapeHtml(categoryLabel(device.deviceType || device.meta.deviceType))}${device.deviceType || device.meta.deviceType ? ` · ${escapeHtml(String(device.deviceType || device.meta.deviceType))}` : ''}</p>
+        </div>
+        ${renderPowerHeader(device)}
+      </div>
       ${statusHtml ? `<div class="vis-status-grid">${statusHtml}</div>` : ''}
       <div class="vis-controls">${controlsHtml || '<p class="vis-empty">Keine steuerbaren Remotes vorhanden.</p>'}</div>
     `;

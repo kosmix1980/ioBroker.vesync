@@ -124,6 +124,12 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.20 (2026-08-23)
+
+- VIS: Ein/Aus switch top-right next to device title
+- VIS: Kindersicherung takes former Ein/Aus control position
+- VIS: hide status tiles for Ein/Aus, Display and Kindersicherung
+
 ### 1.0.19 (2026-08-23)
 
 - VIS: Luftqualität = Stufe (gut/mittel/schlecht), PM2.5 = Messwert

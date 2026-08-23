@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.19",
+    "version": "1.0.20",
     "news": {
+      "1.0.20": {
+        "en": "VIS layout: power switch top-right, hide redundant status tiles",
+        "de": "VIS-Layout: Ein/Aus oben rechts, überflüssige Status-Tiles ausgeblendet"
+      },
       "1.0.19": {
         "en": "VIS: split air quality labels (level as gut/mittel/schlecht, PM2.5 value)",
         "de": "VIS: Luftqualität getrennt (Stufe gut/mittel/schlecht, PM2.5-Wert)"
