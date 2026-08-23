@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.22';
+  const VIS_VERSION = '1.0.23';
   const DEFAULT_INSTANCE = 'vesync.0';
   const THEME_STORAGE_KEY = 'vesync-vis-theme';
 
@@ -105,6 +105,7 @@
     setTargetTemp: 'Ziel-Temperatur',
     setTempUnit: 'Temperatureinheit',
     setLightSwitch: 'Licht',
+    resetFilter: 'Filter zurücksetzen',
     endCook: 'Kochen beenden',
     skipStep: 'Schritt überspringen',
   };
@@ -141,6 +142,7 @@
     'setTargetTemp',
     'setTempUnit',
     'setLightSwitch',
+    'resetFilter',
     'endCook',
     'skipStep',
   ];
@@ -527,6 +529,11 @@
     const type = common.type || 'boolean';
     const role = common.role || '';
 
+    if (cmd === 'resetFilter' || role === 'button') {
+      return `<div class="vis-control"><span class="vis-control-label">${escapeHtml(label)}</span>
+        <button type="button" class="vis-btn vis-btn-outline vis-touch-sm vis-action-btn" data-action="pulse" data-cid="${escapeHtml(cid)}" data-cmd="${escapeHtml(cmd)}">Ausführen</button></div>`;
+    }
+
     if (type === 'boolean' || role === 'switch') {
       const on = val === true || val === 1 || val === 'true';
       return `<div class="vis-control"><span class="vis-control-label">${escapeHtml(label)}</span>
@@ -634,7 +641,7 @@
         return;
       }
       showError('');
-      if (cmd === 'Refresh') {
+      if (cmd === 'Refresh' || cmd === 'resetFilter') {
         setTimeout(loadAll, 1500);
       }
       if (callback) callback(null);

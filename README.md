@@ -124,6 +124,11 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.23 (2026-08-23)
+
+- Add `resetFilter` remote for purifiers (calls VeSync `resetFilter` API)
+- VIS: button „Filter zurücksetzen“ for purifier devices
+
 ### 1.0.22 (2026-08-23)
 
 - VIS: theme selection persists across page reloads (localStorage)

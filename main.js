@@ -878,6 +878,13 @@ class Vesync extends utils.Adapter {
         states: { off: 'off', on: 'on', dim: 'dim', auto: 'auto' },
       });
     }
+    remotes.push({
+      command: 'resetFilter',
+      name: 'resetFilter',
+      type: 'boolean',
+      role: 'button',
+      def: false,
+    });
     return remotes;
   }
 
@@ -1374,6 +1381,10 @@ class Vesync extends utils.Adapter {
           return;
         }
 
+        if (command === 'resetFilter' && !state.val) {
+          return;
+        }
+
         if (id.split('.')[4] === 'cookMode') {
           await this.requestClient({
             method: 'post',
@@ -1464,7 +1475,7 @@ class Vesync extends utils.Adapter {
           if (command === 'setLightSwitch') {
             data = { enabled: state.val };
           }
-          if (command === 'quitSyncFinish' || command === 'skipStep') {
+          if (command === 'quitSyncFinish' || command === 'skipStep' || command === 'resetFilter') {
             data = {};
           }
           if (command === 'setTempUnit') {
@@ -1589,8 +1600,11 @@ class Vesync extends utils.Adapter {
               userCountryCode: 'DE',
             }),
           })
-            .then((res) => {
+            .then(async (res) => {
               this.log.info(JSON.stringify(res.data));
+              if (command === 'resetFilter') {
+                await this.setStateAsync(`${deviceId}.remote.resetFilter`, false, true);
+              }
             })
             .catch(async (error) => {
               this.log.error(error);
