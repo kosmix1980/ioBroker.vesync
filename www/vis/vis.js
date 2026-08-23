@@ -2,13 +2,12 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.20';
+  const VIS_VERSION = '1.0.21';
   const DEFAULT_INSTANCE = 'vesync.0';
 
   const STATUS_LABELS = {
     powerSwitch_1: 'Power',
     mode: 'Modus',
-    level: 'Stufe',
     filter_life: 'restl. Filterlebenszeit',
     filterLife: 'restl. Filterlebenszeit',
     air_quality: 'Luftqualität',

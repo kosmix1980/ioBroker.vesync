@@ -1,6 +1,6 @@
 {
   "name": "iobroker.vesync",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "Adapter for VeSync",
   "author": {
     "name": "TA2k",

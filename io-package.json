@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.20",
+    "version": "1.0.21",
     "news": {
+      "1.0.21": {
+        "en": "VIS: hide level status tile (shown via mode buttons)",
+        "de": "VIS: Stufe-Status ausgeblendet (über Modus-Buttons erkennbar)"
+      },
       "1.0.20": {
         "en": "VIS layout: power switch top-right, hide redundant status tiles",
         "de": "VIS-Layout: Ein/Aus oben rechts, überflüssige Status-Tiles ausgeblendet"
