@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.17",
+    "version": "1.0.18",
     "news": {
+      "1.0.18": {
+        "en": "VIS: prevent stale cache of index.html after updates",
+        "de": "VIS: veralteten Browser-Cache von index.html nach Updates verhindern"
+      },
       "1.0.17": {
         "en": "VIS: add Auto and Sleep to purifier mode buttons",
         "de": "VIS: Auto und Sleep zu Modus-Buttons hinzugefügt"
