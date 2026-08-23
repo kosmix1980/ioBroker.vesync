@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.21",
+    "version": "1.0.22",
     "news": {
+      "1.0.22": {
+        "en": "VIS: persist theme selection in localStorage",
+        "de": "VIS: Theme-Auswahl wird gespeichert (localStorage)"
+      },
       "1.0.21": {
         "en": "VIS: hide level status tile (shown via mode buttons)",
         "de": "VIS: Stufe-Status ausgeblendet (über Modus-Buttons erkennbar)"

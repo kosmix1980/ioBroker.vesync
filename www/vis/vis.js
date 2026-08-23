@@ -2,8 +2,9 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.21';
+  const VIS_VERSION = '1.0.22';
   const DEFAULT_INSTANCE = 'vesync.0';
+  const THEME_STORAGE_KEY = 'vesync-vis-theme';
 
   const STATUS_LABELS = {
     powerSwitch_1: 'Power',
@@ -180,6 +181,36 @@
   };
 
   el.version.textContent = `v${VIS_VERSION}`;
+
+  function applyTheme(isDark) {
+    document.body.classList.toggle('dark', isDark);
+    el.btnTheme.textContent = isDark ? '☀' : '☾';
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', isDark ? '#0f172a' : '#f8fafc');
+  }
+
+  function loadTheme() {
+    try {
+      const saved = localStorage.getItem(THEME_STORAGE_KEY);
+      if (saved === 'light' || saved === 'dark') {
+        applyTheme(saved === 'dark');
+        return;
+      }
+    } catch (e) {
+      // ignore storage errors
+    }
+    applyTheme(document.body.classList.contains('dark'));
+  }
+
+  function saveTheme(isDark) {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light');
+    } catch (e) {
+      // ignore storage errors
+    }
+  }
+
+  loadTheme();
 
   function detectInstance() {
     const m = window.location.pathname.match(/\/adapter\/([^/]+)\//i);
@@ -689,8 +720,9 @@
   });
 
   el.btnTheme.addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    el.btnTheme.textContent = document.body.classList.contains('dark') ? '☀' : '☾';
+    const isDark = !document.body.classList.contains('dark');
+    applyTheme(isDark);
+    saveTheme(isDark);
   });
 
   connect();
