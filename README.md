@@ -124,6 +124,16 @@ Stop:
 <https://forum.iobroker.net/topic/59466/test-adapter-vesync>
 
 ## Changelog
+### 1.0.29 (2026-09-04)
+
+- Store last filter reset timestamp (`status.filterLastReset`) when reset via VIS/adapter or when filter life jumps back to ~100%
+- VIS: show how many days ago the filter was reset
+
+### 1.0.28 (2026-08-31)
+
+- VIS: warning bar when filter life is below 15% (replace filter hint)
+- VIS: dedicated „Filter zurücksetzen“ button in filter section for purifiers
+
 ### 1.0.27 (2026-08-23)
 
 - Add purifier timer remotes (`setTimerHours` 0–23, `setTimerMinutes` 0–59, `startTimer`, `clearTimer`)

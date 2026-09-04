@@ -246,6 +246,77 @@ body.dark {
   color: var(--muted-foreground);
 }
 
+.vis-filter-section {
+  margin-bottom: 8px;
+}
+
+.vis-filter-warning {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+  padding: 8px 10px;
+  border: 1px solid #f59e0b;
+  border-radius: calc(var(--radius) - 2px);
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+body.dark .vis-filter-warning {
+  border-color: #d97706;
+  background: #451a03;
+  color: #fde68a;
+}
+
+.vis-filter-warning strong {
+  font-size: 12px;
+}
+
+.vis-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--muted);
+}
+
+.vis-filter-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vis-filter-label {
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+
+.vis-filter-value {
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.vis-filter-value-low {
+  color: #d97706;
+}
+
+body.dark .vis-filter-value-low {
+  color: #fbbf24;
+}
+
+.vis-filter-meta {
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+
 .vis-status-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

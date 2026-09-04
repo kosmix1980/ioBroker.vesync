@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const VIS_VERSION = '1.0.27';
+  const VIS_VERSION = '1.0.29';
   const DEFAULT_INSTANCE = 'vesync.0';
   const THEME_STORAGE_KEY = 'vesync-vis-theme';
 
@@ -160,6 +160,8 @@
   const HEADER_REMOTES = new Set(['setSwitch']);
 
   const TIMER_REMOTES = new Set(['setTimerHours', 'setTimerMinutes', 'startTimer', 'clearTimer']);
+
+  const FILTER_REMOTES = new Set(['resetFilter']);
 
   const SKIP_REMOTES = new Set([
     'Refresh',
@@ -416,6 +418,59 @@
     </div>`;
   }
 
+  function getFilterLifePercent(device) {
+    for (const key of ['filter_life', 'filterLife']) {
+      const value = device.status[key];
+      if (value == null || value === '') continue;
+      const percent = Number(value);
+      if (!Number.isNaN(percent)) return percent;
+    }
+    return null;
+  }
+
+  function getFilterLastResetTs(device) {
+    const value = device.status.filterLastReset;
+    if (value == null || value === '' || value === 0) return null;
+    const ts = Number(value);
+    return Number.isNaN(ts) || ts <= 0 ? null : ts;
+  }
+
+  function formatDaysSince(ts) {
+    const days = Math.floor((Date.now() - ts) / (24 * 60 * 60 * 1000));
+    if (days <= 0) return 'heute';
+    if (days === 1) return 'vor 1 Tag';
+    return `vor ${days} Tagen`;
+  }
+
+  function renderFilterSection(device) {
+    if (!isPurifier(device) || !device.remotes.resetFilter) return '';
+
+    const filterLife = getFilterLifePercent(device);
+    const showWarning = filterLife != null && filterLife < 15;
+    const lifeLabel = filterLife != null ? `${Math.round(filterLife)} %` : '—';
+    const lastResetTs = getFilterLastResetTs(device);
+    const resetLabel = lastResetTs != null ? formatDaysSince(lastResetTs) : 'noch nicht erfasst';
+
+    const warningHtml = showWarning
+      ? `<div class="vis-filter-warning" role="status">
+          <strong>Filter wechseln</strong>
+          <span>Restlebensdauer unter 15&nbsp;% – bitte Filter tauschen und danach zurücksetzen.</span>
+        </div>`
+      : '';
+
+    return `<div class="vis-filter-section">
+      ${warningHtml}
+      <div class="vis-filter-row">
+        <div class="vis-filter-info">
+          <span class="vis-filter-label">restl. Filterlebenszeit</span>
+          <span class="vis-filter-value${showWarning ? ' vis-filter-value-low' : ''}">${escapeHtml(lifeLabel)}</span>
+          <span class="vis-filter-meta">Zuletzt zurückgesetzt: ${escapeHtml(resetLabel)}</span>
+        </div>
+        <button type="button" class="vis-btn vis-btn-outline vis-touch-sm" data-action="pulse" data-cid="${escapeHtml(device.cid)}" data-cmd="resetFilter">Filter zurücksetzen</button>
+      </div>
+    </div>`;
+  }
+
   function renderDetail(device) {
     if (!device) {
       el.deviceDetail.innerHTML = '<p class="vis-empty">Kein Gerät ausgewählt.</p>';
@@ -424,6 +479,7 @@
 
     const status = pickStatus(device.status);
     const statusHtml = Object.entries(status)
+      .filter(([k]) => k !== 'filterLastReset')
       .slice(0, 8)
       .map(
         ([k, v]) => `<div class="vis-status-tile">
@@ -434,7 +490,7 @@
       .join('');
 
     const controlsHtml = sortRemoteEntries(Object.entries(device.remotes))
-      .filter(([cmd]) => !SKIP_REMOTES.has(cmd) && !HEADER_REMOTES.has(cmd))
+      .filter(([cmd]) => !SKIP_REMOTES.has(cmd) && !HEADER_REMOTES.has(cmd) && !FILTER_REMOTES.has(cmd))
       .map(([cmd, remote]) => {
         if (hasTimerControl(device)) {
           if (TIMER_REMOTES.has(cmd)) {
@@ -458,6 +514,7 @@
         </div>
         ${renderPowerHeader(device)}
       </div>
+      ${renderFilterSection(device)}
       ${statusHtml ? `<div class="vis-status-grid">${statusHtml}</div>` : ''}
       <div class="vis-controls">${controlsHtml || '<p class="vis-empty">Keine steuerbaren Remotes vorhanden.</p>'}</div>
     `;

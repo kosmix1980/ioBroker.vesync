@@ -468,6 +468,9 @@ class Vesync extends utils.Adapter {
                 });
               }
               await this.cleanupRemoteObjects(id, allowedCommands);
+              if (category === 'purifier') {
+                await this.ensureFilterLastResetState(id);
+              }
             }
             this.json2iob.parse(id + '.general', device, { forceIndex: true });
           }
@@ -523,12 +526,28 @@ class Vesync extends utils.Adapter {
             const forceIndex = true;
             const preferedArrayName = null;
 
+            const prevFilterLife = await this.getFilterLifeValue(device.cid);
+            const nextFilterLife = Number(data.filter_life ?? data.filterLife);
+
             this.json2iob.parse(device.cid + '.' + element.path, data, {
               forceIndex: forceIndex,
               write: true,
               preferedArrayName: preferedArrayName,
               channelName: element.desc,
             });
+
+            if (this.getDeviceCategory(device) === 'purifier') {
+              await this.ensureFilterLastResetState(device.cid);
+              // Detect filter reset done in VeSync app (life jumps back near 100%).
+              if (
+                !Number.isNaN(nextFilterLife) &&
+                nextFilterLife >= 99 &&
+                prevFilterLife != null &&
+                prevFilterLife < 95
+              ) {
+                await this.recordFilterReset(device.cid);
+              }
+            }
             // await this.setObjectNotExistsAsync(element.path + ".json", {
             //   type: "state",
             //   common: {
@@ -928,6 +947,46 @@ class Vesync extends utils.Adapter {
    */
   getDeviceByCid(deviceId) {
     return this.deviceArray.find((device) => device.cid === deviceId);
+  }
+
+  /**
+   * Persistent timestamp of the last filter reset (not provided by VeSync API).
+   * @param {string} deviceId
+   */
+  async ensureFilterLastResetState(deviceId) {
+    await this.setObjectNotExistsAsync(`${deviceId}.status.filterLastReset`, {
+      type: 'state',
+      common: {
+        name: 'Filter last reset (Unix ms)',
+        type: 'number',
+        role: 'value.time',
+        read: true,
+        write: false,
+        def: 0,
+      },
+      native: {},
+    });
+  }
+
+  /**
+   * @param {string} deviceId
+   * @returns {Promise<number|null>}
+   */
+  async getFilterLifeValue(deviceId) {
+    const primary = await this.getStateAsync(`${deviceId}.status.filter_life`);
+    const secondary = await this.getStateAsync(`${deviceId}.status.filterLife`);
+    const raw = primary?.val ?? secondary?.val;
+    if (raw == null || raw === '') return null;
+    const value = Number(raw);
+    return Number.isNaN(value) ? null : value;
+  }
+
+  /**
+   * @param {string} deviceId
+   */
+  async recordFilterReset(deviceId) {
+    await this.ensureFilterLastResetState(deviceId);
+    await this.setStateAsync(`${deviceId}.status.filterLastReset`, Date.now(), true);
   }
 
   /**
@@ -1738,6 +1797,9 @@ class Vesync extends utils.Adapter {
               this.log.info(JSON.stringify(res.data));
               if (command === 'resetFilter') {
                 await this.setStateAsync(`${deviceId}.remote.resetFilter`, false, true);
+                if (!res.data || res.data.code === 0 || res.data.code == null) {
+                  await this.recordFilterReset(deviceId);
+                }
               }
             })
             .catch(async (error) => {

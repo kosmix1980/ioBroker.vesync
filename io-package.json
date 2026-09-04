@@ -1,8 +1,16 @@
 {
   "common": {
     "name": "vesync",
-    "version": "1.0.27",
+    "version": "1.0.29",
     "news": {
+      "1.0.29": {
+        "en": "Track filter last reset date and show days since reset in VIS",
+        "de": "Datum des letzten Filter-Resets speichern und Tage seit Reset in der VIS anzeigen"
+      },
+      "1.0.28": {
+        "en": "VIS: filter warning bar below 15% and dedicated reset filter button",
+        "de": "VIS: Filter-Hinweis unter 15 % und eigener Button zum Filter zurücksetzen"
+      },
       "1.0.27": {
         "en": "Add purifier timer (hours 0-23, minutes 0-59) with VIS control",
         "de": "Timer für Luftreiniger (Stunden 0-23, Minuten 0-59) mit VIS-Steuerung"
